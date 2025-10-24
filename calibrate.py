@@ -2,8 +2,8 @@
 """Goggle Calibration Experiment - Main Script
 
 This script runs a light discomfort threshold experiment using adaptive
-staircase methodology (3-down-1-up) to find the brightness level at which
-subjects report discomfort approximately 79.4% of the time.
+staircase methodology (1-up-1-down) to find the brightness level at which
+subjects report discomfort approximately 50% of the time.
 
 Safety: Goggles are automatically turned off on ANY exit path (normal,
 exception, or keyboard interrupt).

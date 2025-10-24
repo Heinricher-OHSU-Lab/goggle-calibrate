@@ -10,10 +10,10 @@
     "start_value": 128,
     "step_sizes": [32, 16, 8, 4, 2, 1],
     "n_up": 1,
-    "n_down": 3,
+    "n_down": 1,
     "n_trials": 30,
     "step_type": "lin",
-    "apply_initial_rule": false
+    "apply_initial_rule": true
   },
   "timing": {
     "pre_stimulus_delay": 6.0,

@@ -53,8 +53,8 @@ goggle-calibrate/
 ## Experiment Methodology
 
 ### Staircase Procedure (Initial)
-- **Algorithm**: Adaptive staircase (3-down-1-up rule)
-- **Target**: 79.4% discomfort threshold
+- **Algorithm**: Adaptive staircase (1-up-1-down rule)
+- **Target**: 50% discomfort threshold
 - **Parameters** (configurable via JSON):
   - Start value: 128 (middle of range)
   - Step sizes: [32, 16, 8, 4, 2, 1] (progressively smaller)

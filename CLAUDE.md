@@ -60,7 +60,7 @@ When implementing features, consider:
 
 When asked to document code or add comments:
 - Assume reader may be research staff, not just developers
-- Explain psychophysics methodology where relevant (e.g., what "3-down-1-up" means)
+- Explain psychophysics methodology where relevant (e.g., what "1-up-1-down" means)
 - Be explicit about units (seconds, milliseconds, brightness 0-255)
 - Document safety assumptions (e.g., "assumes goggles turned off before this call")
 - Provide type hints where possible including in function signatures.

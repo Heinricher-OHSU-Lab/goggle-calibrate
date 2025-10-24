@@ -1,8 +1,8 @@
 """Adaptive staircase procedure for threshold estimation.
 
-This module implements a 3-down-1-up staircase procedure to converge on
-the 79.4% discomfort threshold. It wraps PsychoPy's StairHandler with
-additional functionality for our specific use case.1
+This module implements a 1-up-1-down staircase procedure to converge on
+the 50% discomfort threshold. It wraps PsychoPy's StairHandler with
+additional functionality for our specific use case.
 """
 
 import logging
@@ -16,8 +16,8 @@ from psychopy import data
 class StaircaseManager:
     """Manager for adaptive staircase procedure.
 
-    Implements a 3-down-1-up rule to find the brightness level at which
-    subjects report discomfort 79.4% of the time. The staircase adjusts
+    Implements a 1-up-1-down rule to find the brightness level at which
+    subjects report discomfort 50% of the time. The staircase adjusts
     brightness levels based on responses, using progressively smaller
     step sizes as it converges on the threshold.
     """
@@ -27,12 +27,12 @@ class StaircaseManager:
         start_value: int,
         step_sizes: List[int],
         n_up: int = 1,
-        n_down: int = 3,
+        n_down: int = 1,
         n_trials: int = 30,
         step_type: str = 'lin',
         min_val: int = 0,
         max_val: int = 255,
-        apply_initial_rule: bool = False
+        apply_initial_rule: bool = True
     ):
         """Initialize staircase manager.
 
@@ -41,10 +41,12 @@ class StaircaseManager:
             step_sizes: List of step sizes, used sequentially at each reversal
                        Example: [32, 16, 8, 4, 2, 1] starts with large steps
                        and progressively uses smaller steps
-            n_up: Number of "uncomfortable" responses before increasing brightness
-                  (making stimulus MORE intense = harder = moving AWAY from threshold)
-            n_down: Number of "comfortable" responses before decreasing brightness
-                    (making stimulus LESS intense = easier = moving TOWARD threshold)
+            n_up: Number of "comfortable" responses before increasing brightness
+                  (subject can tolerate current level, so increase to find threshold)
+                  For 1-up-1-down (50% threshold): n_up=1
+            n_down: Number of "uncomfortable" responses before decreasing brightness
+                    (subject cannot tolerate, so decrease to find threshold)
+                    For 1-up-1-down (50% threshold): n_down=1
             n_trials: Minimum number of trials to conduct
             step_type: Type of steps ('lin' for linear, 'log' for logarithmic, 'db' for decibels)
             min_val: Minimum brightness value (0-255)
@@ -67,18 +69,20 @@ class StaircaseManager:
         # - nUp = number of INCORRECT responses before going UP (increasing intensity)
         # - nDown = number of CORRECT responses before going DOWN (decreasing intensity)
         #
-        # For finding discomfort threshold with 3-down-1-up:
-        # - comfortable response → we need 3 to go UP (increase brightness)
-        # - uncomfortable response → we need 1 to go DOWN (decrease brightness)
+        # For finding DISCOMFORT threshold (where we want to go UP to find it):
+        # - comfortable response → "incorrect" (0) - haven't found threshold yet
+        # - uncomfortable response → "correct" (1) - found the threshold!
+        # - 1 comfortable (incorrect) → go UP (increase brightness to find threshold)
+        # - 1 uncomfortable (correct) → go DOWN (back off from threshold)
         #
-        # So we need to SWAP nUp and nDown, and invert the response mapping:
-        # - comfortable → "incorrect" (0) → after 3, goes UP
-        # - uncomfortable → "correct" (1) → after 1, goes DOWN
+        # This is a 1-UP-1-DOWN procedure (50% threshold):
+        # - comfortable → incorrect (0) → after nUp=1, increases brightness
+        # - uncomfortable → correct (1) → after nDown=1, decreases brightness
         self.staircase = data.StairHandler(
             startVal=start_value,
             stepSizes=step_sizes,
-            nUp=n_down,  # SWAPPED: use n_down for nUp (3 comfortable → go up)
-            nDown=n_up,  # SWAPPED: use n_up for nDown (1 uncomfortable → go down)
+            nUp=n_up,    # 1 comfortable (incorrect) → increase brightness
+            nDown=n_down,  # 1 uncomfortable (correct) → decrease brightness
             nTrials=n_trials,
             stepType=step_type,
             minVal=min_val,
@@ -122,13 +126,14 @@ class StaircaseManager:
             uncomfortable: True if subject reported discomfort, False if comfortable
 
         Note:
-            Because we swapped nUp/nDown in the StairHandler initialization,
-            we also need to invert the response:
-            - comfortable → 0 ("incorrect") → after nUp=3 (swapped), goes UP
-            - uncomfortable → 1 ("correct") → after nDown=1 (swapped), goes DOWN
+            Response mapping for DISCOMFORT threshold (1-UP-1-DOWN):
+            - comfortable → "incorrect" (0) → haven't found threshold yet
+            - uncomfortable → "correct" (1) → found the threshold!
+            With nUp=1, nDown=1:
+            - 1 comfortable (incorrect=0) → brightness increases (go up to find threshold)
+            - 1 uncomfortable (correct=1) → brightness decreases (back off from threshold)
         """
-        # Inverted: comfortable=0, uncomfortable=1
-        # This works with our swapped nUp/nDown to create proper 3-down-1-up
+        # uncomfortable=1 (correct), comfortable=0 (incorrect)
         response = 1 if uncomfortable else 0
 
         self.staircase.addData(response)
