@@ -17,8 +17,6 @@ os.environ['PSYCHOPY_TIMING_MODE'] = 'simple'
 
 import logging
 import sys
-from pathlib import Path
-from typing import Optional
 
 from psychopy import prefs
 
