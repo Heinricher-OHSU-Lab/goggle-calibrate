@@ -28,7 +28,8 @@ class StaircaseManager:
         step_sizes: List[int],
         n_up: int = 1,
         n_down: int = 1,
-        n_trials: int = 30,
+        n_trials: int = 100,
+        n_reversals: int = 10,
         step_type: str = 'lin',
         min_val: int = 0,
         max_val: int = 255,
@@ -47,7 +48,8 @@ class StaircaseManager:
             n_down: Number of "uncomfortable" responses before decreasing brightness
                     (subject cannot tolerate, so decrease to find threshold)
                     For 1-up-1-down (50% threshold): n_down=1
-            n_trials: Minimum number of trials to conduct
+            n_trials: Maximum number of trials (experiment stops when n_reversals OR n_trials reached)
+            n_reversals: Target number of reversals (experiment stops after this many reversals)
             step_type: Type of steps ('lin' for linear, 'log' for logarithmic, 'db' for decibels)
             min_val: Minimum brightness value (0-255)
             max_val: Maximum brightness value (0-255)
@@ -59,6 +61,7 @@ class StaircaseManager:
         self.n_up = n_up
         self.n_down = n_down
         self.n_trials = n_trials
+        self.n_reversals = n_reversals
         self.step_type = step_type
         self.min_val = min_val
         self.max_val = max_val
@@ -84,6 +87,7 @@ class StaircaseManager:
             nUp=n_up,    # 1 comfortable (incorrect) → increase brightness
             nDown=n_down,  # 1 uncomfortable (correct) → decrease brightness
             nTrials=n_trials,
+            nReversals=n_reversals,  # Stop after this many reversals
             stepType=step_type,
             minVal=min_val,
             maxVal=max_val,
@@ -198,9 +202,18 @@ class StaircaseManager:
     def is_finished(self) -> bool:
         """Check if staircase has finished.
 
+        Stops when EITHER condition is met:
+        - Reached n_reversals reversals (primary stopping condition)
+        - Reached n_trials trials (safety limit)
+
         Returns:
-            True if no more trials remain, False otherwise
+            True if experiment should stop, False otherwise
         """
+        # Check if we've reached the reversal target
+        if self.get_reversal_count() >= self.n_reversals:
+            return True
+
+        # Check if PsychoPy's staircase is finished
         return self.staircase.finished
 
     def get_trial_count(self) -> int:
@@ -269,6 +282,7 @@ def create_staircase_from_config(config: dict) -> StaircaseManager:
         n_up=sc["n_up"],
         n_down=sc["n_down"],
         n_trials=sc["n_trials"],
+        n_reversals=sc.get("n_reversals", 10),  # Default to 10 reversals
         step_type=sc["step_type"],
         min_val=hw["brightness_min"],
         max_val=hw["brightness_max"],

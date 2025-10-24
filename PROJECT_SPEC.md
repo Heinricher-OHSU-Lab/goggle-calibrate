@@ -55,10 +55,12 @@ goggle-calibrate/
 ### Staircase Procedure (Initial)
 - **Algorithm**: Adaptive staircase (1-up-1-down rule)
 - **Target**: 50% discomfort threshold
+- **Termination**: After 10 reversals (or 100 trials max as safety limit)
 - **Parameters** (configurable via JSON):
   - Start value: 128 (middle of range)
   - Step sizes: [32, 16, 8, 4, 2, 1] (progressively smaller)
-  - Number of trials: 30
+  - Target reversals: 10
+  - Max trials: 100 (safety limit)
   - Min/max values: 0-255
 - Note: All the above should be settable in config
 

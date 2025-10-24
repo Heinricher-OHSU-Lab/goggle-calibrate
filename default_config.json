@@ -11,7 +11,8 @@
     "step_sizes": [32, 16, 8, 4, 2, 1],
     "n_up": 1,
     "n_down": 1,
-    "n_trials": 30,
+    "n_trials": 100,
+    "n_reversals": 10,
     "step_type": "lin",
     "apply_initial_rule": true
   },
