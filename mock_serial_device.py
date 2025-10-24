@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Mock serial device simulator for goggle hardware.
 
-This creates a virtual serial port that simulates the light goggles hardware.
+This creates a virtual serial port that simulates the light goggle's hardware.
 It receives brightness commands (0-255) and validates the protocol.
 
 Usage:
@@ -17,7 +17,6 @@ import os
 import pty
 import select
 import sys
-import threading
 import time
 from pathlib import Path
 

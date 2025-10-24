@@ -7,9 +7,10 @@ even in the case of errors or crashes. All data is written immediately
 
 import csv
 import logging
+import string
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class DataLogger:
@@ -264,7 +265,7 @@ def validate_participant_id(participant_id: str) -> bool:
         return False
 
     # Allow alphanumeric, underscore, and hyphen
-    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
+    allowed_chars = set(string.ascii_letters + string.digits + "_-")
     return all(c in allowed_chars for c in participant_id)
 
 
@@ -284,7 +285,7 @@ def validate_session_id(session_id: str) -> bool:
         return False
 
     # Allow alphanumeric, underscore, and hyphen
-    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-")
+    allowed_chars = set(string.ascii_letters + string.digits + "_-")
     return all(c in allowed_chars for c in session_id)
 
 

@@ -97,12 +97,12 @@ class GoggleController:
         for sig in [signal.SIGINT, signal.SIGTERM]:
             signal.signal(sig, self._signal_handler)
 
-    def _signal_handler(self, signum: int, frame) -> None:
+    def _signal_handler(self, signum: int, _frame) -> None:
         """Handle interrupt signals by turning off goggles and exiting.
 
         Args:
             signum: Signal number
-            frame: Current stack frame
+            _frame: Current stack frame (unused but required)
         """
         signal_name = signal.Signals(signum).name
         logging.warning(f"Received {signal_name}, shutting down goggles...")

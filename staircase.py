@@ -186,13 +186,13 @@ class StaircaseManager:
 
         if n_reversals == 0 or len(reversals) < n_reversals:
             # Use all reversals
-            threshold = np.mean(reversals)
+            threshold = float(np.mean(reversals))
             logging.info(
                 f"Threshold calculated from all {len(reversals)} reversals: {threshold:.2f}"
             )
         else:
             # Use last n reversals
-            threshold = np.mean(reversals[-n_reversals:])
+            threshold = float(np.mean(reversals[-n_reversals:]))
             logging.info(
                 f"Threshold calculated from last {n_reversals} reversals: {threshold:.2f}"
             )
