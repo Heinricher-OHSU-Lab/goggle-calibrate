@@ -248,3 +248,6 @@ calibration-test-data/*.csv
 calibration-test-data/*.psydat
 calibration-test-data/*.log
 !calibration-test-data/.gitkeep
+
+# Planning documents
+PLAN.md

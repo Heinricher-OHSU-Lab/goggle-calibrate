@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Goggle Calibration Experiment Configuration",
+  "description": "Configuration schema for the light discomfort threshold experiment",
+  "type": "object",
+  "properties": {
+    "hardware": {
+      "type": "object",
+      "description": "Hardware interface settings",
+      "properties": {
+        "serial_port": {
+          "type": "string",
+          "description": "Serial port for goggles controller (e.g., /dev/tty.usbserial-0001 on Mac, COM3 on Windows)",
+          "default": "/dev/tty.usbserial-0001"
+        },
+        "baud_rate": {
+          "type": "integer",
+          "description": "Serial port baud rate",
+          "default": 9600
+        },
+        "brightness_min": {
+          "type": "integer",
+          "description": "Minimum brightness level (0-255)",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 0
+        },
+        "brightness_max": {
+          "type": "integer",
+          "description": "Maximum brightness level (0-255)",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 255
+        },
+        "serial_timeout": {
+          "type": "number",
+          "description": "Serial port timeout in seconds",
+          "default": 1.0
+        }
+      },
+      "required": ["serial_port", "baud_rate", "brightness_min", "brightness_max"]
+    },
+    "staircase": {
+      "type": "object",
+      "description": "Adaptive staircase parameters (3-down-1-up method)",
+      "properties": {
+        "start_value": {
+          "type": "integer",
+          "description": "Initial brightness level to test",
+          "minimum": 0,
+          "maximum": 255,
+          "default": 128
+        },
+        "step_sizes": {
+          "type": "array",
+          "description": "Step sizes for each reversal stage (progressively smaller)",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "default": [32, 16, 8, 4, 2, 1]
+        },
+        "n_up": {
+          "type": "integer",
+          "description": "Number of 'uncomfortable' responses before increasing brightness",
+          "minimum": 1,
+          "default": 1
+        },
+        "n_down": {
+          "type": "integer",
+          "description": "Number of 'comfortable' responses before decreasing brightness",
+          "minimum": 1,
+          "default": 3
+        },
+        "n_trials": {
+          "type": "integer",
+          "description": "Minimum number of trials to conduct",
+          "minimum": 1,
+          "default": 30
+        },
+        "step_type": {
+          "type": "string",
+          "description": "Step type: 'lin' for linear steps",
+          "enum": ["lin", "log", "db"],
+          "default": "lin"
+        },
+        "apply_initial_rule": {
+          "type": "boolean",
+          "description": "Use 1-up/1-down until first reversal",
+          "default": false
+        }
+      },
+      "required": ["start_value", "step_sizes", "n_up", "n_down", "n_trials"]
+    },
+    "timing": {
+      "type": "object",
+      "description": "Trial timing parameters (all in seconds)",
+      "properties": {
+        "pre_stimulus_delay": {
+          "type": "number",
+          "description": "Delay before stimulus presentation (seconds)",
+          "minimum": 0,
+          "default": 6.0
+        },
+        "stimulus_duration": {
+          "type": "number",
+          "description": "Duration of light stimulus (seconds)",
+          "minimum": 0,
+          "default": 2.0
+        },
+        "inter_trial_interval": {
+          "type": "number",
+          "description": "Delay between trials (seconds)",
+          "minimum": 0,
+          "default": 6.0
+        },
+        "response_timeout": {
+          "type": "number",
+          "description": "Maximum time to wait for response (seconds, 0 = no timeout)",
+          "minimum": 0,
+          "default": 0
+        }
+      },
+      "required": ["pre_stimulus_delay", "stimulus_duration", "inter_trial_interval"]
+    },
+    "paths": {
+      "type": "object",
+      "description": "File and directory paths",
+      "properties": {
+        "data_directory": {
+          "type": "string",
+          "description": "Directory for experimental data files",
+          "default": "~/Documents/Calibration/data"
+        },
+        "log_directory": {
+          "type": "string",
+          "description": "Directory for log files",
+          "default": "~/Documents/Calibration/logs"
+        },
+        "config_directory": {
+          "type": "string",
+          "description": "Directory for configuration files",
+          "default": "~/Documents/Calibration/config"
+        }
+      },
+      "required": ["data_directory", "log_directory", "config_directory"]
+    },
+    "data": {
+      "type": "object",
+      "description": "Data collection and analysis settings",
+      "properties": {
+        "threshold_reversals": {
+          "type": "integer",
+          "description": "Number of last reversals to average for threshold (0 = use all)",
+          "minimum": 0,
+          "default": 6
+        },
+        "auto_save": {
+          "type": "boolean",
+          "description": "Automatically save data after each trial",
+          "default": true
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "description": "Experimenter display settings",
+      "properties": {
+        "show_instructions": {
+          "type": "boolean",
+          "description": "Show initial instructions to experimenter",
+          "default": true
+        },
+        "show_trial_info": {
+          "type": "boolean",
+          "description": "Show current trial information during experiment",
+          "default": true
+        },
+        "fullscreen": {
+          "type": "boolean",
+          "description": "Run in fullscreen mode",
+          "default": false
+        }
+      }
+    }
+  },
+  "required": ["hardware", "staircase", "timing", "paths"]
+}

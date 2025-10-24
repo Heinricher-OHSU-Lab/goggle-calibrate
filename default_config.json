@@ -1,0 +1,38 @@
+{
+  "hardware": {
+    "serial_port": "/dev/tty.usbserial-0001",
+    "baud_rate": 9600,
+    "brightness_min": 0,
+    "brightness_max": 255,
+    "serial_timeout": 1.0
+  },
+  "staircase": {
+    "start_value": 128,
+    "step_sizes": [32, 16, 8, 4, 2, 1],
+    "n_up": 1,
+    "n_down": 3,
+    "n_trials": 30,
+    "step_type": "lin",
+    "apply_initial_rule": false
+  },
+  "timing": {
+    "pre_stimulus_delay": 6.0,
+    "stimulus_duration": 2.0,
+    "inter_trial_interval": 6.0,
+    "response_timeout": 0
+  },
+  "paths": {
+    "data_directory": "~/Documents/Calibration/data",
+    "log_directory": "~/Documents/Calibration/logs",
+    "config_directory": "~/Documents/Calibration/config"
+  },
+  "data": {
+    "threshold_reversals": 6,
+    "auto_save": true
+  },
+  "display": {
+    "show_instructions": true,
+    "show_trial_info": true,
+    "fullscreen": false
+  }
+}
