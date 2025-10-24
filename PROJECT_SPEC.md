@@ -40,8 +40,8 @@ goggle-calibrate/
 
 ### Light Goggles
 - **Control Range**: 0-255 (integer values)
-  - 0 = off
-  - 255 = maximum brightness
+  - 0 = off (only used for safety/shutdown, never for threshold testing)
+  - 1-255 = test range (1 = minimum test brightness, 255 = maximum brightness)
 - **Interface**: 
   - Serial port (specified in config) to light controller hardware
   - Protocol is to send a LF delimited string with the numeric value to set the goggle to
@@ -61,7 +61,7 @@ goggle-calibrate/
   - Step sizes: [32, 16, 8, 4, 2, 1] (progressively smaller)
   - Target reversals: 10
   - Max trials: 100 (safety limit)
-  - Min/max values: 0-255
+  - Min/max values: 1-255 (0 reserved for safety/shutdown only)
 - Note: All the above should be settable in config
 
 ### Trial Flow
