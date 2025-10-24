@@ -249,5 +249,8 @@ calibration-test-data/*.psydat
 calibration-test-data/*.log
 !calibration-test-data/.gitkeep
 
+# Test files - development testing only
+tests/
+
 # Planning documents
 PLAN.md
