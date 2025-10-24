@@ -9,12 +9,23 @@ Safety: Goggles are automatically turned off on ANY exit path (normal,
 exception, or keyboard interrupt).
 """
 
+import os
+
+# Performance optimizations: Set environment variables BEFORE importing PsychoPy
+# This experiment only needs ~0.1s timing precision, not microsecond accuracy
+os.environ['PSYCHOPY_TIMING_MODE'] = 'simple'
+
 import logging
 import sys
 from pathlib import Path
 from typing import Optional
 
-from psychopy import core
+from psychopy import prefs
+
+# Disable unnecessary PsychoPy features for faster startup
+prefs.general['startUpPlugins'] = []  # No plugins needed
+prefs.hardware['audioLib'] = []  # No audio used in this experiment
+prefs.general['allowGUI'] = True  # Allow GUI for window creation
 
 import config
 import data_logger

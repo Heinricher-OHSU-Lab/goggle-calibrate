@@ -94,3 +94,27 @@ When asked to document code or add comments:
 - `experiment_ui.py:59-93` - contains unused `get_participant_info()` method with Qt dialog
 
 **Note**: The program is currently working with console input. Only revisit if GUI dialog becomes a requirement.
+
+### Slow Startup Time
+
+**Status**: Investigated but no significant improvements found. Tabled for now.
+
+**Issue**: Program takes noticeable time to start up, primarily due to PsychoPy initialization overhead (OpenGL, Qt backends, etc.).
+
+**Optimizations Already Applied**:
+- Set `PSYCHOPY_TIMING_MODE='simple'` before importing PsychoPy
+- Disabled unnecessary PsychoPy plugins (`prefs.general['startUpPlugins'] = []`)
+- Disabled audio library loading (`prefs.hardware['audioLib'] = []`)
+- Using minimal selective imports (`from psychopy import prefs` instead of `import psychopy`)
+- Removed unused imports (e.g., `core` from calibrate.py)
+
+**Location**: `calibrate.py:12-28` (performance optimizations)
+
+**Analysis**: Most startup time is inherent to PsychoPy window creation in `experiment_ui.py`, which requires loading OpenGL and Qt backends. This is unavoidable for a graphical experiment interface.
+
+**Possible Future Optimizations** (if startup time becomes critical):
+- Delay window creation until after participant info is entered (minor gain, code reorganization needed)
+- Investigate if PsychoPy can run with even more minimal backends
+- Consider alternative lightweight window libraries (major refactoring)
+
+**Note**: Current startup time is acceptable for research use. Only revisit if it becomes a blocker for users.
