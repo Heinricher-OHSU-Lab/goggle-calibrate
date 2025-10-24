@@ -38,6 +38,8 @@ black .
 
 **Python Version**: Must use Python 3.10.x (managed via pyenv). Python 3.11+ will not work due to PsychoPy dependencies.
 
+**Test Files**: All development test files go in the `tests/` directory. This directory is gitignored, so test programs won't be committed. Put any ad-hoc testing, debugging scripts, or experimental code there.
+
 ### Code Architecture Patterns
 
 **Safety-Critical Hardware Control**: All code that controls the goggles must ensure they return to brightness level 0 on ANY exit path (normal exit, exceptions, keyboard interrupt). Use try/finally blocks or context managers.
