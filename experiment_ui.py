@@ -47,8 +47,11 @@ class ExperimentUI:
             win=self.win,
             text='',
             color='white',
-            height=0.05,
-            wrapWidth=0.9
+            height=0.035,
+            wrapWidth=0.9,
+            alignText='left',
+            anchorHoriz='left',
+            pos=(-0.45, 0)
         )
 
         # Create clock for timing
@@ -110,14 +113,17 @@ Session: {session_id}
 EXPERIMENTER INSTRUCTIONS:
 
 1. Ensure subject is wearing goggles comfortably
+
 2. Explain to subject: "You will see brief flashes of light.
    Please tell me only if a flash is uncomfortable.
    If you don't say anything, I'll assume it was comfortable."
+
 3. During each trial:
    - Wait for the light stimulus
    - Ask subject: "Uncomfortable?"
    - Press Y ONLY if subject reports discomfort
    - No response = comfortable (automatic after interval)
+
 4. Press ESC at any time to abort
 
 Press SPACE to begin experiment"""
