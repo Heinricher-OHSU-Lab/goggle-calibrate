@@ -7,6 +7,7 @@ even in the case of errors or crashes. All data is written immediately
 
 import csv
 import logging
+import os
 import string
 from datetime import datetime
 from pathlib import Path
@@ -218,12 +219,17 @@ class DataLogger:
 def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> None:
     """Configure Python logging system for the experiment.
 
-    Creates both file and console handlers. File logs are saved with
-    timestamp in the filename.
+    Creates file handler for all runs. Console handler is only added in
+    development mode (controlled by GOGGLE_DEV_MODE environment variable).
 
     Args:
         log_dir: Directory where log files will be saved
-        log_level: Logging level (default: logging.INFO)
+        log_level: Logging level for file logging (default: logging.INFO)
+
+    Environment Variables:
+        GOGGLE_DEV_MODE: Set to a log level name to enable console logging at that level.
+                        Valid values: DEBUG, INFO, WARNING, ERROR, CRITICAL
+                        If not set, console logging is disabled.
     """
     # Create log directory if it doesn't exist
     log_dir = Path(log_dir)
@@ -233,20 +239,50 @@ def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> None:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = log_dir / f"experiment_{timestamp}.log"
 
-    # Configure root logger
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            # File handler: detailed logging
-            logging.FileHandler(log_filename),
-            # Console handler: experimenter feedback
-            logging.StreamHandler()
-        ]
-    )
+    # Check for development mode first to determine console level
+    dev_mode_level = os.environ.get('GOGGLE_DEV_MODE', '').upper()
+    console_level = None
+    if dev_mode_level:
+        # Map string level to logging constant
+        level_map = {
+            'DEBUG': logging.DEBUG,
+            'INFO': logging.INFO,
+            'WARNING': logging.WARNING,
+            'ERROR': logging.ERROR,
+            'CRITICAL': logging.CRITICAL
+        }
+        console_level = level_map.get(dev_mode_level, logging.INFO)
+
+    # Configure root logger directly (basicConfig won't work if logging already initialized)
+    root_logger = logging.getLogger()
+    # Set root logger to minimum level needed (so both file and console handlers work)
+    if console_level is not None:
+        root_logger.setLevel(min(log_level, console_level))
+    else:
+        root_logger.setLevel(log_level)
+
+    # Clear any existing handlers
+    root_logger.handlers.clear()
+
+    # Create formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    # File handler: always enabled for detailed logging
+    file_handler = logging.FileHandler(log_filename)
+    file_handler.setLevel(log_level)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
+
+    # Console handler: only enabled in development mode
+    if console_level is not None:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(console_level)
+        console_handler.setFormatter(formatter)
+        root_logger.addHandler(console_handler)
+        logging.info(f"Development mode: console logging enabled at {dev_mode_level} level")
 
     logging.info(f"Logging initialized: {log_filename}")
-    logging.info(f"Log level: {logging.getLevelName(log_level)}")
+    logging.info(f"File log level: {logging.getLevelName(log_level)}")
 
 
 def validate_participant_id(participant_id: str) -> bool:
