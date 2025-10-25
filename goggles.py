@@ -219,13 +219,8 @@ class GoggleController:
         if level < 0 or level > 255:
             raise GoggleError(f"Brightness level must be 0-255, got {level}")
 
-        # Constrain to configured range
-        if level < self.brightness_min:
-            logging.warning(
-                f"Requested brightness {level} below minimum {self.brightness_min}, "
-                f"clamping to minimum"
-            )
-            level = self.brightness_min
+        # Constrain to maximum (safety limit)
+        # Note: brightness_min is only for staircase, not enforced here
         if level > self.brightness_max:
             logging.warning(
                 f"Requested brightness {level} above maximum {self.brightness_max}, "
