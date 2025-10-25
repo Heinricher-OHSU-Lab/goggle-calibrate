@@ -254,3 +254,6 @@ tests/
 
 # Planning documents
 PLAN.md
+
+# macOS
+.DS_Store
