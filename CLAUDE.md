@@ -30,7 +30,7 @@ black .
 
 **Virtual Environment**: The project uses `.venv/` (with dot prefix), not `venv/`
 
-**Main Script Name**: `calibrate.py` (note: PROJECT_SPEC.md references `experiment.py` in one place - `calibrate.py` is correct)
+**Main Script Name**: `calibrate.py`
 
 **Data Directories**:
 - Development testing: `calibration-test-data/` (in repo, gitignored)

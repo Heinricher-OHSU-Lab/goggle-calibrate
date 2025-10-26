@@ -175,7 +175,7 @@ cd goggle-calibrate
 ### Running During Development
 ```bash
 source venv/bin/activate
-python experiment.py
+python calibrate.py
 ```
 
 ### Testing
