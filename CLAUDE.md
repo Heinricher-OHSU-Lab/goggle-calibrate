@@ -38,6 +38,10 @@ black .
 
 **Python Version**: Must use Python 3.10.x (managed via pyenv). Python 3.11+ will not work due to PsychoPy dependencies.
 
+**PsychoPy Version**: Uses PsychoPy 2023.2.3 (last version with PyQt5, required for macOS Monterey compatibility). Installation requires a workaround for the missing `pypi-search` package - see `PSYCHOPY_INSTALL.md` for details. The helper script `scripts/install_psychopy.sh` handles the workaround automatically.
+
+**NumPy Version**: Must use NumPy <2.0 as PsychoPy 2023.2.3 uses deprecated APIs removed in NumPy 2.0.
+
 **Test Files**: All development test files go in the `tests/` directory. This directory is gitignored, so test programs won't be committed. Put any ad-hoc testing, debugging scripts, or experimental code there.
 
 ### Code Architecture Patterns
@@ -77,11 +81,11 @@ When asked to document code or add comments:
 
 ### Qt/PsychoPy Initialization Crash
 
-**Status**: Temporarily resolved by reverting to console input, but underlying issue not fully diagnosed.
+**Status**: Resolved by using PsychoPy 2023.2.3 with PyQt5.
 
-**Issue**: When using PsychoPy's `DlgFromDict` GUI dialog for participant info input, the program crashes with Qt-related errors. The crash appears to be related to Qt initialization conflicts between PsychoPy and PyQt6.
+**Issue**: When using PsychoPy's `DlgFromDict` GUI dialog for participant info input, the program was experiencing crashes with Qt-related errors. This was because PsychoPy 2024.x requires PyQt6, which is incompatible with macOS Monterey.
 
-**Current Workaround**: Participant and session IDs are now collected via console input (`get_participant_info_console()`) BEFORE creating the PsychoPy window. This avoids the Qt initialization conflict.
+**Current Solution**: The project now uses PsychoPy 2023.2.3 with PyQt5, which is compatible with macOS Monterey. Participant and session IDs are collected via console input (`get_participant_info_console()`) BEFORE creating the PsychoPy window.
 
 **Location**: `calibrate.py:96-127` (console input function), `calibrate.py:130-147` (called before UI creation)
 
