@@ -9,9 +9,19 @@ import csv
 import logging
 import os
 import string
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
+
+# Cache Python and PsychoPy versions at module load time
+# (PsychoPy is already imported before this module in normal workflow)
+_PYTHON_VERSION = sys.version.split()[0]
+try:
+    import psychopy
+    _PSYCHOPY_VERSION = psychopy.__version__
+except (ImportError, AttributeError):
+    _PSYCHOPY_VERSION = "unknown"
 
 
 class DataLogger:
@@ -29,6 +39,7 @@ class DataLogger:
         data_dir: Path,
         participant_id: str,
         session_id: str,
+        starting_intensity: Optional[int] = None,
         auto_flush: bool = True
     ):
         """Initialize data logger.
@@ -37,6 +48,7 @@ class DataLogger:
             data_dir: Directory where data files will be saved
             participant_id: Participant identifier
             session_id: Session identifier
+            starting_intensity: Starting brightness intensity (1-255), if provided
             auto_flush: Whether to flush after each write (default: True)
                        Setting this to True ensures data persists even on crashes
 
@@ -46,6 +58,7 @@ class DataLogger:
         self.data_dir = Path(data_dir)
         self.participant_id = participant_id
         self.session_id = session_id
+        self.starting_intensity = starting_intensity
         self.auto_flush = auto_flush
 
         # Generate timestamp for filename
@@ -58,6 +71,10 @@ class DataLogger:
         filename = f"{participant_id}_{session_id}_{self.timestamp}.csv"
         self.csv_path = self.data_dir / filename
 
+        # Generate metadata filename: {participant}_{session}_{timestamp}.meta
+        meta_filename = f"{participant_id}_{session_id}_{self.timestamp}.meta"
+        self.meta_path = self.data_dir / meta_filename
+
         # CSV file handle and writer
         self._csv_file: Optional[Any] = None
         self._csv_writer: Optional[csv.DictWriter] = None
@@ -65,21 +82,30 @@ class DataLogger:
         # Track whether file is open
         self._is_open = False
 
-        # Column names for CSV (as specified in PROJECT_SPEC.md)
+        # Column names for CSV
+        # Note: participant_id and session_id removed - stored in .meta file and filename
         self.fieldnames = [
             "trial_number",
             "goggle_level",
             "uncomfortable",
             "reversals_so_far",
-            "timestamp",
-            "participant_id",
-            "session_id"
+            "timestamp"
         ]
 
-        logging.info(f"DataLogger initialized: {self.csv_path}")
+        # Metadata tracking
+        self._metadata: dict[str, str] = {}
+        self._experiment_start_time: Optional[str] = None
+        self._experiment_aborted: bool = False
+
+        # Final results (set by write_final_results())
+        self._final_threshold: Optional[float] = None
+        self._total_trials: Optional[int] = None
+        self._total_reversals: Optional[int] = None
+
+        logging.info(f"DataLogger initialized: {self.csv_path}, {self.meta_path}")
 
     def open(self) -> None:
-        """Open CSV file and write header.
+        """Open CSV file and write header. Also writes initial metadata.
 
         Raises:
             IOError: If file cannot be opened
@@ -102,11 +128,15 @@ class DataLogger:
             self._is_open = True
             logging.info(f"Opened CSV file: {self.csv_path}")
 
+            # Record experiment start time and write initial metadata
+            self._experiment_start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._write_metadata()
+
         except IOError as e:
             raise IOError(f"Failed to open CSV file {self.csv_path}: {e}")
 
     def close(self) -> None:
-        """Close CSV file."""
+        """Close CSV file and update final metadata."""
         if not self._is_open:
             return
 
@@ -120,6 +150,9 @@ class DataLogger:
             self._is_open = False
             self._csv_file = None
             self._csv_writer = None
+
+            # Write final metadata with end time
+            self._write_metadata()
 
     def log_trial(
         self,
@@ -155,9 +188,7 @@ class DataLogger:
             "goggle_level": goggle_level,
             "uncomfortable": uncomfortable_int,
             "reversals_so_far": reversals_so_far,
-            "timestamp": trial_timestamp,
-            "participant_id": self.participant_id,
-            "session_id": self.session_id
+            "timestamp": trial_timestamp
         }
 
         try:
@@ -175,6 +206,112 @@ class DataLogger:
         except IOError as e:
             logging.error(f"Failed to write trial data: {e}")
             raise
+
+    def _write_metadata(self) -> None:
+        """Write metadata to .meta file.
+
+        Writes all currently available metadata fields to the .meta file.
+        Uses INI-style key=value format. Auto-flushes if auto_flush is True.
+
+        The file is completely rewritten each time to ensure consistency.
+        """
+        try:
+            # Build metadata dictionary with session information (always available)
+            metadata = {
+                'participant_id': self.participant_id,
+                'session_id': self.session_id,
+                'timestamp': self.timestamp
+            }
+
+            if self._experiment_start_time:
+                metadata['experiment_start_time'] = self._experiment_start_time
+
+            # Add end time if experiment is done
+            if not self._is_open or self._experiment_aborted or self._final_threshold is not None:
+                metadata['experiment_end_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Experiment parameters
+            if self.starting_intensity is not None:
+                metadata['starting_intensity'] = str(self.starting_intensity)
+
+            # Try to get config file path (DEFAULT_CONFIG_PATH is a module constant)
+            try:
+                import config
+                metadata['config_file_path'] = str(config.DEFAULT_CONFIG_PATH)
+            except (ImportError, AttributeError):
+                pass  # Config path not critical
+
+            # System information (from cached module-level variables)
+            metadata['python_version'] = _PYTHON_VERSION
+            metadata['psychopy_version'] = _PSYCHOPY_VERSION
+
+            # Results (if available)
+            if hasattr(self, '_final_threshold') and self._final_threshold is not None:
+                metadata['final_threshold'] = f"{self._final_threshold:.2f}"
+
+            if hasattr(self, '_total_trials'):
+                metadata['total_trials'] = str(self._total_trials)
+
+            if hasattr(self, '_total_reversals'):
+                metadata['total_reversals'] = str(self._total_reversals)
+
+            # Completion status
+            if hasattr(self, '_final_threshold') and self._final_threshold is not None:
+                metadata['experiment_completed'] = 'true'
+            else:
+                metadata['experiment_completed'] = 'false'
+
+            if self._experiment_aborted:
+                metadata['experiment_aborted'] = 'true'
+
+            # Write to file
+            with open(self.meta_path, 'w') as f:
+                for key, value in metadata.items():
+                    f.write(f"{key}={value}\n")
+
+                # Flush if auto_flush enabled
+                if self.auto_flush:
+                    f.flush()
+
+            logging.debug(f"Metadata written to {self.meta_path}")
+
+        except Exception as e:
+            logging.error(f"Failed to write metadata: {e}")
+            # Don't raise - metadata write failure shouldn't stop experiment
+
+    def write_final_results(
+        self,
+        final_threshold: float,
+        total_trials: int,
+        total_reversals: int
+    ) -> None:
+        """Write final experiment results to metadata file.
+
+        Args:
+            final_threshold: Calculated threshold value
+            total_trials: Total number of trials completed
+            total_reversals: Total number of reversals observed
+        """
+        self._final_threshold = final_threshold
+        self._total_trials = total_trials
+        self._total_reversals = total_reversals
+
+        # Rewrite metadata file with results
+        self._write_metadata()
+
+        logging.info(
+            f"Final results written: threshold={final_threshold:.2f}, "
+            f"trials={total_trials}, reversals={total_reversals}"
+        )
+
+    def mark_aborted(self) -> None:
+        """Mark experiment as aborted (ESC pressed).
+
+        Sets the aborted flag and updates the metadata file.
+        """
+        self._experiment_aborted = True
+        self._write_metadata()
+        logging.info("Experiment marked as aborted in metadata")
 
     def get_filepath(self) -> Path:
         """Get the path to the CSV file.
@@ -323,6 +460,52 @@ def validate_session_id(session_id: str) -> bool:
     # Allow alphanumeric, underscore, and hyphen
     allowed_chars = set(string.ascii_letters + string.digits + "_-")
     return all(c in allowed_chars for c in session_id)
+
+
+def validate_starting_intensity(value: str) -> Optional[int]:
+    """Validate starting intensity input.
+
+    Ensures value is an integer between 1 and 255 (inclusive).
+    0 is reserved for goggle shutdown only.
+
+    Args:
+        value: String input to validate
+
+    Returns:
+        Integer value if valid, None if invalid
+    """
+    try:
+        intensity = int(value)
+        if 1 <= intensity <= 255:
+            return intensity
+        return None
+    except ValueError:
+        return None
+
+
+def read_metadata(meta_path: Path) -> dict[str, str]:
+    """Read metadata from .meta file.
+
+    Args:
+        meta_path: Path to .meta file
+
+    Returns:
+        Dictionary of metadata key-value pairs
+
+    Raises:
+        IOError: If file cannot be read
+        FileNotFoundError: If file does not exist
+    """
+    metadata = {}
+
+    with open(meta_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and '=' in line:
+                key, value = line.split('=', 1)
+                metadata[key.strip()] = value.strip()
+
+    return metadata
 
 
 def generate_staircase_filename(

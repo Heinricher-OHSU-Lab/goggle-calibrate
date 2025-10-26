@@ -102,11 +102,11 @@ def run_trial(
     return uncomfortable
 
 
-def get_participant_info_console() -> tuple[str, str]:
-    """Get participant and session IDs from console input.
+def get_participant_info_console() -> tuple[str, str, int]:
+    """Get participant ID, session ID, and starting intensity from console input.
 
     Returns:
-        Tuple of (participant_id, session_id)
+        Tuple of (participant_id, session_id, starting_intensity)
 
     Raises:
         ValueError: If IDs are invalid
@@ -132,8 +132,17 @@ def get_participant_info_console() -> tuple[str, str]:
             continue
         break
 
+    while True:
+        intensity_input = input("Enter Starting Intensity (1-255): ").strip()
+        starting_intensity = data_logger.validate_starting_intensity(intensity_input)
+        if starting_intensity is None:
+            print("ERROR: Invalid Starting Intensity. Must be an integer between 1 and 255.")
+            print()
+            continue
+        break
+
     print()
-    return participant_id, session_id
+    return participant_id, session_id, starting_intensity
 
 
 def run_experiment(cfg: dict) -> None:
@@ -148,11 +157,17 @@ def run_experiment(cfg: dict) -> None:
     """
     # Get participant info from console BEFORE creating UI
     # This avoids Qt initialization issues
-    participant_id, session_id = get_participant_info_console()
-    logging.info(f"Starting experiment: participant={participant_id}, session={session_id}")
+    participant_id, session_id, starting_intensity = get_participant_info_console()
+    logging.info(
+        f"Starting experiment: participant={participant_id}, "
+        f"session={session_id}, starting_intensity={starting_intensity}"
+    )
 
     # Create UI
     with experiment_ui.create_ui_from_config(cfg) as ui:
+        # Initialize logger variable outside try block so it's accessible in except
+        logger = None
+
         try:
 
             # Show instructions
@@ -167,11 +182,12 @@ def run_experiment(cfg: dict) -> None:
                 data_dir=data_dir,
                 participant_id=participant_id,
                 session_id=session_id,
+                starting_intensity=starting_intensity,
                 auto_flush=cfg["data"]["auto_save"]
             )
 
-            # Create staircase
-            staircase_mgr = staircase.create_staircase_from_config(cfg)
+            # Create staircase with user-specified starting intensity
+            staircase_mgr = staircase.create_staircase_from_config(cfg, starting_intensity)
 
             # Create goggles controller
             goggles_controller = goggles.create_goggles_from_config(cfg)
@@ -209,6 +225,13 @@ def run_experiment(cfg: dict) -> None:
                 threshold_reversals = cfg["data"].get("threshold_reversals", 6)
                 threshold = staircase_mgr.calculate_threshold(threshold_reversals)
 
+                # Write final results to metadata
+                logger.write_final_results(
+                    final_threshold=threshold,
+                    total_trials=staircase_mgr.get_trial_count(),
+                    total_reversals=staircase_mgr.get_reversal_count()
+                )
+
                 # Save staircase data
                 staircase_file = data_logger.generate_staircase_filename(
                     data_dir=data_dir,
@@ -232,10 +255,14 @@ def run_experiment(cfg: dict) -> None:
             finally:
                 # CRITICAL: Always close goggles and logger
                 goggles_controller.close()
-                logger.close()
+                if logger is not None:
+                    logger.close()
 
         except KeyboardInterrupt:
             logging.warning("Experiment aborted by experimenter (ESC pressed)")
+            # Mark experiment as aborted in metadata
+            if logger is not None:
+                logger.mark_aborted()
             ui.show_abort_message("Experiment Aborted")
             raise
 

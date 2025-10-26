@@ -264,11 +264,16 @@ class StaircaseManager:
         return summary
 
 
-def create_staircase_from_config(config: dict) -> StaircaseManager:
+def create_staircase_from_config(
+    config: dict,
+    starting_intensity: Optional[int] = None
+) -> StaircaseManager:
     """Create a StaircaseManager from a configuration dictionary.
 
     Args:
         config: Configuration dictionary containing 'staircase' and 'hardware' sections
+        starting_intensity: Optional starting intensity (1-255) that overrides config value.
+                          If None, uses config['staircase']['start_value']
 
     Returns:
         Configured StaircaseManager instance
@@ -276,8 +281,11 @@ def create_staircase_from_config(config: dict) -> StaircaseManager:
     sc = config["staircase"]
     hw = config["hardware"]
 
+    # Use user-provided starting intensity if available, otherwise use config value
+    start_val = starting_intensity if starting_intensity is not None else sc["start_value"]
+
     return StaircaseManager(
-        start_value=sc["start_value"],
+        start_value=start_val,
         step_sizes=sc["step_sizes"],
         n_up=sc["n_up"],
         n_down=sc["n_down"],
