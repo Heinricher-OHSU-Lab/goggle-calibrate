@@ -1,5 +1,4 @@
-# PsychoP
-y 2023.2.3 - Last version with PyQt5 (required for macOS Monterey)
+# PsychoPy 2023.2.3 - Last version with PyQt5 (required for macOS Monterey)
 # NOTE: Must install with --no-deps first due to pypi-search dependency issue
 # See setup.sh for installation workaround
 psychopy==2023.2.3
