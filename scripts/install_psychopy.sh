@@ -45,6 +45,12 @@ pip install \
 echo "✓ Additional dependencies installed"
 echo ""
 
+# Ensure NumPy is downgraded (opencv-python may have upgraded it to 2.x)
+echo "Step 4: Ensuring NumPy <2.0 is installed..."
+pip install 'numpy<2.0'
+echo "✓ NumPy version constraint enforced"
+echo ""
+
 # Verify installation
 echo "Verifying installation..."
 python -c "import psychopy; from psychopy import visual; import numpy as np; print(f'✓ PsychoPy {psychopy.__version__} with NumPy {np.__version__}')"
