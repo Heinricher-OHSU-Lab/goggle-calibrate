@@ -252,8 +252,5 @@ calibration-test-data/*.log
 # Test files - development testing only
 tests/
 
-# Planning documents
-PLAN.md
-
 # macOS
 .DS_Store
