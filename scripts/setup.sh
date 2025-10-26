@@ -1,7 +1,7 @@
 #!/bin/bash
 # Setup script for Goggle Calibration Experiment - Production Deployment
-# This script installs Python 3.10.15 via pyenv and sets up the virtual environment
-# For development: configure PyCharm to use Python 3.10.15 and .venv directory
+# This script installs Python 3.10.19 via pyenv and sets up the virtual environment
+# For development: configure PyCharm to use Python 3.10.19 and .venv directory
 #
 # IMPORTANT: This script has been updated to work around the pypi-search dependency issue
 # in PsychoPy 2023.2.3. PsychoPy is installed with --no-deps, then dependencies are
@@ -34,8 +34,8 @@ fi
 
 echo " pyenv found"
 
-# Check if Python 3.10.15 is installed
-PYTHON_VERSION="3.10.15"
+# Check if Python 3.10.19 is installed
+PYTHON_VERSION="3.10.19"
 echo ""
 echo "Checking for Python ${PYTHON_VERSION}..."
 

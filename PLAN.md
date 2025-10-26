@@ -54,7 +54,7 @@ This plan outlines the implementation of a PsychoPy-based light discomfort thres
 ### 1.3 Setup Script
 - [x] Implement `scripts/setup.sh`:
   - Check for pyenv installation
-  - Install Python 3.10.15 if needed
+  - Install Python 3.10.19 if needed
   - Create `.venv/` virtual environment
   - Install requirements.txt dependencies
   - Create `~/Documents/Calibration/` directory structure
@@ -331,7 +331,7 @@ timestamp=20241026_142345
 experiment_start_time=2024-10-26 14:23:45
 starting_intensity=128
 config_file_path=/Users/user/Documents/Calibration/config/experiment_config.json
-python_version=3.10.15
+python_version=3.10.19
 psychopy_version=2025.1.1
 experiment_completed=false
 ```
@@ -345,7 +345,7 @@ experiment_start_time=2024-10-26 14:23:45
 experiment_end_time=2024-10-26 14:28:32
 starting_intensity=128
 config_file_path=/Users/user/Documents/Calibration/config/experiment_config.json
-python_version=3.10.15
+python_version=3.10.19
 psychopy_version=2025.1.1
 final_threshold=145.67
 total_trials=23
@@ -362,7 +362,7 @@ experiment_start_time=2024-10-26 14:23:45
 experiment_end_time=2024-10-26 14:26:18
 starting_intensity=128
 config_file_path=/Users/user/Documents/Calibration/config/experiment_config.json
-python_version=3.10.15
+python_version=3.10.19
 psychopy_version=2025.1.1
 total_trials=12
 total_reversals=3

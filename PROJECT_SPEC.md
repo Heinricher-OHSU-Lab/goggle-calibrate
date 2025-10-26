@@ -8,7 +8,7 @@ This is intended for prelimary data collection to get a calibration for typical 
 ## Target Platform
 - **Development**: MacOS 26 (Tahoe)
 - **Deployment**: macOS 12 (Monterey)
-- **Python Version**: 3.10.15 (required for deployment compatibility)
+- **Python Version**: 3.10.19 (required for deployment compatibility)
 - **Key Dependency**: PsychoPy 2025.1.1 (Suggestion from PsychoPy web site for stable deployments)
 
 ### Why These Versions?

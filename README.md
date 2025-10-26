@@ -17,7 +17,7 @@ This experiment presents light stimuli through goggles and uses an adaptive stai
 ## Requirements
 
 - macOS 12 (Monterey) or later
-- Python 3.10.15 (managed via pyenv)
+- Python 3.10.19 (managed via pyenv)
 - Serial port connection to light goggles
 
 ## Installation (Production)
@@ -41,7 +41,7 @@ This experiment presents light stimuli through goggles and uses an adaptive stai
    ```
 
    This will:
-   - Install Python 3.10.15 via pyenv
+   - Install Python 3.10.19 via pyenv
    - Create virtual environment at `.venv/`
    - Install all dependencies
    - Create data directories at `~/Documents/Calibration/`
@@ -178,7 +178,7 @@ goggle-calibrate/
 - On Windows, check Device Manager - Ports
 
 ### PsychoPy Issues
-- Ensure Python 3.10.15 is being used: `python --version`
+- Ensure Python 3.10.19 is being used: `python --version`
 - Verify PsychoPy installed: `python -c "import psychopy; print(psychopy.__version__)"`
 - Re-run setup if needed: `./scripts/setup.sh`
 
@@ -215,7 +215,7 @@ See `CLAUDE.md` for guidance on working with Claude Code in this repository.
 
 ## Technical Details
 
-- **Python Version**: 3.10.15 (required for PsychoPy compatibility)
+- **Python Version**: 3.10.19 (required for PsychoPy compatibility)
 - **PsychoPy Version**: 2025.1.1
 - **Staircase Algorithm**: 1-up-1-down (targets 50% threshold)
 - **Serial Protocol**: LF-delimited numeric strings (0-255)
