@@ -223,38 +223,117 @@ Duration: {duration:.1f}s"""
                 raise KeyboardInterrupt("Experiment aborted by experimenter")
             core.wait(0.05)
 
+    def show_stimulus_and_collect_response(
+        self,
+        trial_number: int,
+        level: int,
+        stim_duration: float,
+        response_period: float
+    ) -> bool:
+        """Show stimulus and collect response with continuous monitoring.
+
+        Monitors keyboard from stimulus onset through end of response period.
+        Provides real-time feedback on current response state.
+        Last key pressed (Y or N) wins.
+
+        Args:
+            trial_number: Current trial number
+            level: Brightness level being presented (0-255)
+            stim_duration: Duration of stimulus in seconds
+            response_period: Duration to collect response after stimulus (seconds)
+
+        Returns:
+            True if uncomfortable (last press was Y), False if comfortable (N or no press)
+
+        Raises:
+            KeyboardInterrupt: If ESC is pressed
+        """
+        start_time = self.clock.getTime()
+        total_duration = stim_duration + response_period
+        current_response = None  # None, 'Y', or 'N'
+
+        while True:
+            elapsed = self.clock.getTime() - start_time
+
+            if elapsed >= total_duration:
+                break
+
+            # Determine which phase we're in
+            if elapsed < stim_duration:
+                # STIMULUS PHASE
+                remaining_stim = stim_duration - elapsed
+                phase_text = f"STIMULUS ACTIVE\n\nBrightness: {level}\n\n"
+                timer_text = f"Stimulus time: {remaining_stim:.1f}s remaining"
+            else:
+                # RESPONSE PHASE
+                response_elapsed = elapsed - stim_duration
+                response_remaining = response_period - response_elapsed
+                phase_text = f"Trial {trial_number}\n\nAsk subject: \"Uncomfortable?\"\n\n"
+                timer_text = f"Time remaining: {response_remaining:.1f}s"
+
+            # Build response status display
+            if current_response == 'Y':
+                response_status = "Current Response: UNCOMFORTABLE"
+            elif current_response == 'N':
+                response_status = "Current Response: comfortable"
+            else:
+                response_status = "Current Response: (none - comfortable)"
+
+            instructions = "\n\nPress Y = Uncomfortable\nPress N = Comfortable\n(Last key wins)"
+
+            display_text = phase_text + response_status + instructions + "\n\n" + timer_text
+
+            self.text.text = display_text
+            self.text.draw()
+            self.win.flip()
+
+            # Check for keys - listen for Y, N, and ESC throughout
+            keys = event.getKeys(keyList=['y', 'n', 'escape'])
+
+            if 'escape' in keys:
+                raise KeyboardInterrupt("Experiment aborted by experimenter")
+            elif 'y' in keys:
+                current_response = 'Y'
+                logging.info(f"Trial {trial_number}: Key pressed = Y (uncomfortable) at {elapsed:.1f}s")
+            elif 'n' in keys:
+                current_response = 'N'
+                logging.info(f"Trial {trial_number}: Key pressed = N (comfortable) at {elapsed:.1f}s")
+
+            core.wait(0.05)
+
+        # Determine final response
+        uncomfortable = (current_response == 'Y')
+
+        if current_response == 'Y':
+            logging.info(f"Trial {trial_number}: Final response = UNCOMFORTABLE")
+        else:
+            logging.info(f"Trial {trial_number}: Final response = COMFORTABLE")
+
+        return uncomfortable
+
     def get_response(
         self,
         trial_number: int,
         timeout: float
     ) -> bool:
-        """Prompt experimenter for subject's response.
+        """Prompt experimenter for subject's response with real-time feedback.
 
-        Waits for the full timeout period. If 'Y' is pressed, registers as
-        uncomfortable. If timeout elapses with no 'Y', registers as comfortable.
-        This maintains consistent trial timing.
+        Continuously monitors Y/N keys throughout the timeout period.
+        Displays current response state with visual feedback.
+        Last key pressed wins (allows correction).
 
         Args:
             trial_number: Current trial number
-            timeout: Maximum time to wait for response (seconds)
+            timeout: Time period to collect response (seconds)
 
         Returns:
-            True if uncomfortable (Y pressed), False if comfortable (no Y pressed)
+            True if uncomfortable (last press was Y), False if comfortable (N or no press)
 
         Raises:
             KeyboardInterrupt: If ESC is pressed
         """
-        prompt_text = f"""Trial {trial_number}
-
-Ask subject: "Uncomfortable?"
-
-Press Y if YES (uncomfortable)
-No response = comfortable
-
-Time remaining: """
-
         start_time = self.clock.getTime()
-        response = False  # Default to comfortable
+        current_response = None  # None, 'Y', or 'N'
 
         while True:
             elapsed = self.clock.getTime() - start_time
@@ -263,28 +342,48 @@ Time remaining: """
             if remaining <= 0:
                 break
 
-            # Update display with countdown
-            display_text = prompt_text + f"{remaining:.1f}s"
+            # Build display text with current response state
+            header = f"Trial {trial_number}\n\nAsk subject: \"Uncomfortable?\"\n\n"
+
+            if current_response == 'Y':
+                response_status = "Current Response: UNCOMFORTABLE"
+            elif current_response == 'N':
+                response_status = "Current Response: comfortable"
+            else:
+                response_status = "Current Response: (none - comfortable)"
+
+            instructions = "\n\nPress Y = Uncomfortable\nPress N = Comfortable\n(Last key wins)"
+            countdown = f"\n\nTime remaining: {remaining:.1f}s"
+
+            display_text = header + response_status + instructions + countdown
+
             self.text.text = display_text
             self.text.draw()
             self.win.flip()
 
-            # Check for keys
-            keys = event.getKeys(keyList=['y', 'escape'])
+            # Check for keys - listen for Y, N, and ESC
+            keys = event.getKeys(keyList=['y', 'n', 'escape'])
 
             if 'escape' in keys:
                 raise KeyboardInterrupt("Experiment aborted by experimenter")
             elif 'y' in keys:
-                response = True
-                # Don't break - wait for full timeout to maintain cadence
-                logging.info(f"Trial {trial_number}: Response = UNCOMFORTABLE (at {elapsed:.1f}s)")
+                current_response = 'Y'
+                logging.info(f"Trial {trial_number}: Key pressed = Y (uncomfortable) at {elapsed:.1f}s")
+            elif 'n' in keys:
+                current_response = 'N'
+                logging.info(f"Trial {trial_number}: Key pressed = N (comfortable) at {elapsed:.1f}s")
 
             core.wait(0.05)
 
-        if not response:
-            logging.info(f"Trial {trial_number}: Response = COMFORTABLE (no Y pressed)")
+        # Determine final response
+        uncomfortable = (current_response == 'Y')
 
-        return response
+        if current_response == 'Y':
+            logging.info(f"Trial {trial_number}: Final response = UNCOMFORTABLE")
+        else:
+            logging.info(f"Trial {trial_number}: Final response = COMFORTABLE")
+
+        return uncomfortable
 
     def show_completion(
         self,

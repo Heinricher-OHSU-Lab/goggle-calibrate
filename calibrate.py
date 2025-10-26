@@ -74,18 +74,22 @@ def run_trial(
     # Pre-stimulus delay
     ui.show_countdown(pre_delay, "Stimulus in")
 
-    # Present stimulus
+    # Present stimulus and collect response with continuous monitoring
+    # Goggles are on during stim_duration, off during ITI
+    # Keyboard monitored throughout both periods
     logging.info(f"Trial {trial_number}: Setting goggles to brightness {level}")
     goggles_controller.set_brightness(level)
 
-    ui.show_stimulus_active(level, stim_duration)
+    uncomfortable = ui.show_stimulus_and_collect_response(
+        trial_number=trial_number,
+        level=level,
+        stim_duration=stim_duration,
+        response_period=iti
+    )
 
-    # Turn off goggles
+    # Turn off goggles after response collected
     logging.info(f"Trial {trial_number}: Turning off goggles")
     goggles_controller.set_brightness(0)
-
-    # Get response (uses inter-trial interval as timeout)
-    uncomfortable = ui.get_response(trial_number, iti)
 
     # Log trial data BEFORE updating staircase
     # This ensures data is saved even if something fails
