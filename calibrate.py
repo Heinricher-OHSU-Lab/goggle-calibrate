@@ -39,7 +39,8 @@ def run_trial(
     goggles_controller: goggles.GoggleController,
     logger: data_logger.DataLogger,
     staircase_mgr: staircase.StaircaseManager,
-    timing_config: dict
+    timing_config: dict,
+    is_first_trial: bool = False
 ) -> bool:
     """Run a single trial.
 
@@ -51,6 +52,7 @@ def run_trial(
         logger: DataLogger instance
         staircase_mgr: StaircaseManager instance
         timing_config: Timing configuration dictionary
+        is_first_trial: True if this is the first trial (default: False)
 
     Returns:
         True if uncomfortable response, False if comfortable
@@ -71,8 +73,10 @@ def run_trial(
         reversals=staircase_mgr.get_reversal_count()
     )
 
-    # Pre-stimulus delay
-    ui.show_countdown(pre_delay, "Stimulus in")
+    # Pre-stimulus delay only on first trial
+    # After first trial, the inter-trial interval provides the delay
+    if is_first_trial:
+        ui.show_countdown(pre_delay, "Stimulus in")
 
     # Present stimulus and collect response with continuous monitoring
     # Goggles are on during stim_duration, off during ITI
@@ -219,7 +223,8 @@ def run_experiment(cfg: dict) -> None:
                         goggles_controller=goggles_controller,
                         logger=logger,
                         staircase_mgr=staircase_mgr,
-                        timing_config=cfg["timing"]
+                        timing_config=cfg["timing"],
+                        is_first_trial=(trial_number == 1)
                     )
 
                 # Experiment completed normally
