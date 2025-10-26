@@ -78,7 +78,7 @@ This configuration is typically done once during initial setup.
 - Run `ls /dev/tty.usb*` again - the new device that appears is the correct one
 
 **Program still reports serial port connection error**
-- Verify the path in `config.json` is spelled exactly as shown in Terminal
+- Verify the path in `experiment_config.json` is spelled exactly as shown in Terminal
 - Make sure you kept the quotation marks around the path
 - Make sure the comma after the closing quotation mark is still there
 - Try quitting and restarting Terminal, then running the program again
