@@ -60,7 +60,7 @@ This configuration is typically done once during initial setup.
 2. If successful, the program should start normally and be able to control the goggles.
 
 3. If you see an error about the serial port, double-check that:
-   - The path in `config.json` exactly matches what you found in Step 1
+   - The path in `experiment_config.json` exactly matches what you found in Step 1
    - The quotation marks and comma are still in place
    - There are no typos in the path
 
