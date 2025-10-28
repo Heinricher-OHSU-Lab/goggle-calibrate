@@ -237,7 +237,7 @@ This plan outlines the implementation of a PsychoPy-based light discomfort thres
 
 ### 7.3 Platform Testing
 - [x] Test on macOS 26 (development)
-  - **Status**: Working on macOS 25.0.0 (Darwin)
+  - **Status**: Working on macOS 26 (Tahoe)
 - [ ] Test on macOS 12 Monterey (deployment target)
   - **Status**: Not yet tested on target platform
 - [ ] Verify timing precision on both platforms
