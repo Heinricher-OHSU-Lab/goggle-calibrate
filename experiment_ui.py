@@ -228,10 +228,12 @@ Duration: {duration:.1f}s"""
         trial_number: int,
         level: int,
         stim_duration: float,
-        response_period: float
+        response_period: float,
+        goggles_controller
     ) -> bool:
         """Show stimulus and collect response with continuous monitoring.
 
+        Controls goggles timing: ON during stimulus, OFF during response period.
         Monitors keyboard from stimulus onset through end of response period.
         Provides real-time feedback on current response state.
         Last key pressed (Y or N) wins.
@@ -241,6 +243,7 @@ Duration: {duration:.1f}s"""
             level: Brightness level being presented (0-255)
             stim_duration: Duration of stimulus in seconds
             response_period: Duration to collect response after stimulus (seconds)
+            goggles_controller: GoggleController instance to control timing
 
         Returns:
             True if uncomfortable (last press was Y), False if comfortable (N or no press)
@@ -252,54 +255,76 @@ Duration: {duration:.1f}s"""
         total_duration = stim_duration + response_period
         current_response = None  # None, 'Y', or 'N'
 
-        while True:
-            elapsed = self.clock.getTime() - start_time
+        # Turn on goggles at start of stimulus
+        logging.info(f"Trial {trial_number}: Setting goggles to brightness {level}")
+        goggles_controller.set_brightness(level)
 
-            if elapsed >= total_duration:
-                break
+        # Track whether we've transitioned to response phase
+        in_stimulus_phase = True
 
-            # Determine which phase we're in
-            if elapsed < stim_duration:
-                # STIMULUS PHASE
-                remaining_stim = stim_duration - elapsed
-                phase_text = f"STIMULUS ACTIVE\n\nBrightness: {level}\n\n"
-                timer_text = f"Stimulus time: {remaining_stim:.1f}s remaining"
-            else:
-                # RESPONSE PHASE
-                response_elapsed = elapsed - stim_duration
-                response_remaining = response_period - response_elapsed
-                phase_text = f"Trial {trial_number}\n\nAsk subject: \"Uncomfortable?\"\n\n"
-                timer_text = f"Time remaining: {response_remaining:.1f}s"
+        try:
+            while True:
+                elapsed = self.clock.getTime() - start_time
 
-            # Build response status display
-            if current_response == 'Y':
-                response_status = "Current Response: UNCOMFORTABLE"
-            elif current_response == 'N':
-                response_status = "Current Response: comfortable"
-            else:
-                response_status = "Current Response: (none - comfortable)"
+                if elapsed >= total_duration:
+                    break
 
-            instructions = "\n\nPress Y = Uncomfortable\nPress N = Comfortable\n(Last key wins)"
+                # Determine which phase we're in
+                if elapsed < stim_duration:
+                    # STIMULUS PHASE
+                    remaining_stim = stim_duration - elapsed
+                    phase_text = f"STIMULUS ACTIVE\n\nBrightness: {level}\n\n"
+                    timer_text = f"Stimulus time: {remaining_stim:.1f}s remaining"
+                else:
+                    # RESPONSE PHASE
+                    # Turn off goggles when transitioning from stimulus to response phase
+                    if in_stimulus_phase:
+                        logging.info(f"Trial {trial_number}: Stimulus ended, turning off goggles")
+                        goggles_controller.set_brightness(0)
+                        in_stimulus_phase = False
 
-            display_text = phase_text + response_status + instructions + "\n\n" + timer_text
+                    response_elapsed = elapsed - stim_duration
+                    response_remaining = response_period - response_elapsed
+                    phase_text = f"Trial {trial_number}\n\nAsk subject: \"Uncomfortable?\"\n\n"
+                    timer_text = f"Time remaining: {response_remaining:.1f}s"
 
-            self.text.text = display_text
-            self.text.draw()
-            self.win.flip()
+                # Build response status display
+                if current_response == 'Y':
+                    response_status = "Current Response: UNCOMFORTABLE"
+                elif current_response == 'N':
+                    response_status = "Current Response: comfortable"
+                else:
+                    response_status = "Current Response: (none - comfortable)"
 
-            # Check for keys - listen for Y, N, and ESC throughout
-            keys = event.getKeys(keyList=['y', 'n', 'escape'])
+                instructions = "\n\nPress Y = Uncomfortable\nPress N = Comfortable\n(Last key wins)"
 
-            if 'escape' in keys:
-                raise KeyboardInterrupt("Experiment aborted by experimenter")
-            elif 'y' in keys:
-                current_response = 'Y'
-                logging.info(f"Trial {trial_number}: Key pressed = Y (uncomfortable) at {elapsed:.1f}s")
-            elif 'n' in keys:
-                current_response = 'N'
-                logging.info(f"Trial {trial_number}: Key pressed = N (comfortable) at {elapsed:.1f}s")
+                display_text = phase_text + response_status + instructions + "\n\n" + timer_text
 
-            core.wait(0.05)
+                self.text.text = display_text
+                self.text.draw()
+                self.win.flip()
+
+                # Check for keys - listen for Y, N, and ESC throughout
+                keys = event.getKeys(keyList=['y', 'n', 'escape'])
+
+                if 'escape' in keys:
+                    raise KeyboardInterrupt("Experiment aborted by experimenter")
+                elif 'y' in keys:
+                    current_response = 'Y'
+                    logging.info(f"Trial {trial_number}: Key pressed = Y (uncomfortable) at {elapsed:.1f}s")
+                elif 'n' in keys:
+                    current_response = 'N'
+                    logging.info(f"Trial {trial_number}: Key pressed = N (comfortable) at {elapsed:.1f}s")
+
+                core.wait(0.05)
+
+        finally:
+            # Safety: Ensure goggles are off even if exception occurs
+            # (This is defensive programming - the goggles should already be off
+            # if we completed the stimulus phase normally)
+            if in_stimulus_phase:
+                logging.info(f"Trial {trial_number}: Ensuring goggles off (safety)")
+                goggles_controller.set_brightness(0)
 
         # Determine final response
         uncomfortable = (current_response == 'Y')

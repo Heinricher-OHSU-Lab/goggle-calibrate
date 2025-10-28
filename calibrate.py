@@ -78,21 +78,21 @@ def run_trial(
     if is_first_trial:
         ui.show_countdown(pre_delay, "Stimulus in")
 
-    # Present stimulus and collect response with continuous monitoring
-    # Goggles are on during stim_duration, off during ITI
-    # Keyboard monitored throughout both periods
-    logging.info(f"Trial {trial_number}: Setting goggles to brightness {level}")
-    goggles_controller.set_brightness(level)
-
+    # Present stimulus and collect response
+    # show_stimulus_and_collect_response() controls goggles timing:
+    # - Goggles ON during stim_duration
+    # - Goggles OFF during ITI (response_period)
+    # - Keyboard monitored throughout both periods
     uncomfortable = ui.show_stimulus_and_collect_response(
         trial_number=trial_number,
         level=level,
         stim_duration=stim_duration,
-        response_period=iti
+        response_period=iti,
+        goggles_controller=goggles_controller
     )
 
-    # Turn off goggles after response collected
-    logging.info(f"Trial {trial_number}: Turning off goggles")
+    # Safety: Ensure goggles are off (defensive programming)
+    # This should be redundant, but provides an extra safety layer
     goggles_controller.set_brightness(0)
 
     # Log trial data BEFORE updating staircase
