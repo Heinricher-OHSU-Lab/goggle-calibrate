@@ -91,6 +91,7 @@ All data is saved to `~/Documents/Calibration/`
 
 ### Files Created Per Session:
 - `{participant}_{session}_{timestamp}.csv` - Trial-by-trial data
+- `{participant}_{session}_{timestamp}.meta` - Session metadata (participant info, config, results)
 - `{participant}_{session}_{timestamp}_staircase.psydat` - Staircase object for analysis
 - `logs/experiment_{timestamp}.log` - Complete runtime log
 
@@ -100,27 +101,29 @@ All data is saved to `~/Documents/Calibration/`
 - `uncomfortable` - Response (1=uncomfortable, 0=comfortable)
 - `reversals_so_far` - Cumulative reversal count
 - `timestamp` - Trial timestamp
-- `participant_id` - Participant identifier
-- `session_id` - Session identifier
+
+Note: `participant_id` and `session_id` are stored in the filename and `.meta` file, not in the CSV.
 
 ## Experimenter Workflow
 
 1. Launch experiment: `./scripts/run_calibrate.sh`
-2. Enter participant ID and session ID when prompted
+2. Enter participant ID, session ID, and starting intensity when prompted
 3. Read instructions on screen (press SPACE to continue)
 4. Ensure subject is wearing goggles comfortably
 5. Explain to subject: "You will see brief flashes of light. Please tell me only if a flash is uncomfortable."
 
 ### During Each Trial:
-1. Wait for light stimulus (automatic)
-2. Ask subject: "Uncomfortable?"
-3. Press **Y** only if subject reports discomfort
-4. No response = automatically recorded as comfortable after interval
-5. Next trial begins automatically
+1. **Stimulus Phase** (~2s): Goggles turn ON at test brightness. Screen shows "STIMULUS ACTIVE"
+2. **Response Phase** (~6s): Goggles turn OFF. Screen prompts to ask subject
+3. Ask subject: "Uncomfortable?"
+4. Press **Y** if subject reports discomfort, **N** if comfortable, or no key for automatic comfortable
+5. Response can be entered during either phase - last key pressed wins
+6. Next trial begins automatically after response period
 
 ### Controls:
-- **Y** - Subject reports uncomfortable
-- **No key** - Comfortable (automatic after inter-trial interval)
+- **Y** - Subject reports uncomfortable (can press during stimulus or response phase)
+- **N** - Subject reports comfortable (can press during stimulus or response phase)
+- **No key** - Comfortable (automatic after response period ends)
 - **ESC** - Abort experiment (goggles turn off immediately)
 
 ## Testing
@@ -216,7 +219,7 @@ See `CLAUDE.md` for guidance on working with Claude Code in this repository.
 ## Technical Details
 
 - **Python Version**: 3.10.19 (required for PsychoPy compatibility)
-- **PsychoPy Version**: 2025.1.1
+- **PsychoPy Version**: 2023.2.3 (last version with PyQt5 for macOS Monterey compatibility)
 - **Staircase Algorithm**: 1-up-1-down (targets 50% threshold)
 - **Serial Protocol**: LF-delimited numeric strings (0-255)
 - **Timing Precision**: +/- 0.1 second
