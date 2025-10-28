@@ -40,7 +40,8 @@ class DataLogger:
         participant_id: str,
         session_id: str,
         starting_intensity: Optional[int] = None,
-        auto_flush: bool = True
+        auto_flush: bool = True,
+        timestamp: Optional[str] = None
     ):
         """Initialize data logger.
 
@@ -51,6 +52,9 @@ class DataLogger:
             starting_intensity: Starting brightness intensity (1-255), if provided
             auto_flush: Whether to flush after each write (default: True)
                        Setting this to True ensures data persists even on crashes
+            timestamp: Timestamp string (YYYYMMDD_HHMMSS format). If not provided,
+                      current time will be used. Providing this allows log files
+                      and data files to have matching timestamps.
 
         Raises:
             IOError: If data directory cannot be created or accessed
@@ -61,8 +65,8 @@ class DataLogger:
         self.starting_intensity = starting_intensity
         self.auto_flush = auto_flush
 
-        # Generate timestamp for filename
-        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        # Use provided timestamp or generate one
+        self.timestamp = timestamp if timestamp else datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Create data directory if it doesn't exist
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -353,7 +357,11 @@ class DataLogger:
         self.close()
 
 
-def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> None:
+def setup_logging(
+    log_dir: Path,
+    log_level: int = logging.INFO,
+    timestamp: Optional[str] = None
+) -> str:
     """Configure Python logging system for the experiment.
 
     Creates file handler for all runs. Console handler is only added in
@@ -362,6 +370,12 @@ def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> None:
     Args:
         log_dir: Directory where log files will be saved
         log_level: Logging level for file logging (default: logging.INFO)
+        timestamp: Timestamp string (YYYYMMDD_HHMMSS format). If not provided,
+                  current time will be used. Providing this allows log files
+                  and data files to have matching timestamps.
+
+    Returns:
+        The timestamp string used for the log filename (either provided or generated)
 
     Environment Variables:
         GOGGLE_DEV_MODE: Set to a log level name to enable console logging at that level.
@@ -372,9 +386,10 @@ def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> None:
     log_dir = Path(log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
 
-    # Generate log filename with timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = log_dir / f"experiment_{timestamp}.log"
+    # Use provided timestamp or generate one
+    if timestamp is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = log_dir / f"{timestamp}.log"
 
     # Check for development mode first to determine console level
     dev_mode_level = os.environ.get('GOGGLE_DEV_MODE', '').upper()
@@ -420,6 +435,8 @@ def setup_logging(log_dir: Path, log_level: int = logging.INFO) -> None:
 
     logging.info(f"Logging initialized: {log_filename}")
     logging.info(f"File log level: {logging.getLevelName(log_level)}")
+
+    return timestamp
 
 
 def validate_participant_id(participant_id: str) -> bool:

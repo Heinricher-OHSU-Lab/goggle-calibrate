@@ -153,11 +153,12 @@ def get_participant_info_console() -> tuple[str, str, int]:
     return participant_id, session_id, starting_intensity
 
 
-def run_experiment(cfg: dict) -> None:
+def run_experiment(cfg: dict, session_timestamp: str) -> None:
     """Run the complete experiment.
 
     Args:
         cfg: Configuration dictionary
+        session_timestamp: Timestamp string (YYYYMMDD_HHMMSS) shared by log and data files
 
     Raises:
         KeyboardInterrupt: If ESC is pressed
@@ -185,13 +186,14 @@ def run_experiment(cfg: dict) -> None:
             paths = config.get_expanded_paths(cfg)
             data_dir = paths["data_directory"]
 
-            # Create data logger
+            # Create data logger with shared timestamp
             logger = data_logger.DataLogger(
                 data_dir=data_dir,
                 participant_id=participant_id,
                 session_id=session_id,
                 starting_intensity=starting_intensity,
-                auto_flush=cfg["data"]["auto_save"]
+                auto_flush=cfg["data"]["auto_save"],
+                timestamp=session_timestamp
             )
 
             # Create staircase with user-specified starting intensity
@@ -291,19 +293,24 @@ def main() -> int:
         # Load configuration
         cfg = config.load_config()
 
-        # Setup logging
+        # Generate timestamp for this session (shared by log and data files)
+        from datetime import datetime
+        session_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Setup logging with timestamp
         paths = config.get_expanded_paths(cfg)
         data_logger.setup_logging(
             log_dir=paths["log_directory"],
-            log_level=logging.INFO
+            log_level=logging.INFO,
+            timestamp=session_timestamp
         )
 
         logging.info("="*60)
         logging.info("GOGGLE CALIBRATION EXPERIMENT STARTING")
         logging.info("="*60)
 
-        # Run experiment
-        run_experiment(cfg)
+        # Run experiment with shared timestamp
+        run_experiment(cfg, session_timestamp)
 
         logging.info("Experiment completed successfully")
         return 0
