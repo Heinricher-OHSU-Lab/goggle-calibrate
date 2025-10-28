@@ -1,23 +1,28 @@
 # Implementation Plan - Goggle Calibration Experiment
 
-## Status Summary (Last Updated: 2024-10-26)
+## Status Summary (Last Updated: 2025-01-28)
 
 **Core Implementation: ✅ COMPLETE**
-- All phases 1-6 fully implemented and working
+- All phases 1-8 fully implemented and working
 - Extensive testing performed (15+ test files in `tests/`)
 - Documentation complete (README, code comments, type hints)
 
-**User Feedback Changes Needed (from 2024-10-26 demo):**
-- [ ] Add starting intensity input to session initialization dialog
-- [ ] Improve response input with continuous keyboard monitoring and correction capability
+**Recent Updates (2025-01-28):**
+- ✅ Fixed critical goggle timing bug (goggles now turn OFF after stimulus, not after ITI)
+- ✅ Updated README to reflect current implementation
+
+**User Feedback Changes (from 2024-10-26 demo): ✅ COMPLETE**
+- ✅ Added starting intensity input to session initialization
+- ✅ Implemented continuous keyboard monitoring with correction capability
+- ✅ Added .meta file for comprehensive session metadata
 
 **Remaining Tasks:**
 - [ ] Verify against PROJECT_SPEC.md requirements (systematic checklist needed)
 - [ ] Test on macOS 12 Monterey (deployment target platform)
-- [ ] Test with actual hardware goggles
-- [ ] User review and feedback
+- [ ] Test with actual hardware goggles to verify timing fix
+- [ ] User review and feedback on corrected implementation
 
-**Ready For:** Implementation of user feedback changes, then deployment preparation
+**Ready For:** Hardware testing and final deployment preparation
 
 ---
 
@@ -27,13 +32,13 @@ This plan outlines the implementation of a PsychoPy-based light discomfort thres
 ## Phase 1: Foundation & Setup
 
 ### 1.1 Research & Documentation
-- [ ] Search for current PsychoPy 2025.1.1 documentation
+- [x] Search for PsychoPy 2023.2.3 documentation
   - Staircase/QUEST adaptive methods API
   - Serial port control (psychopy.hardware.serial or pyserial)
   - Event handling and keyboard input
   - Visual window management (or lack thereof for goggle-only display)
   - Data saving (.psydat format)
-  - **Note**: Implementation working but formal documentation research not completed
+  - **Status**: Implementation complete using PsychoPy 2023.2.3 (last version with PyQt5 for macOS Monterey compatibility)
 
 ### 1.2 Configuration System
 - [x] Design configuration schema (experiment_config.json):
@@ -242,34 +247,42 @@ This plan outlines the implementation of a PsychoPy-based light discomfort thres
 
 ## Phase 8: User Feedback Enhancements (Added 2024-10-26)
 
-### 8.1 Starting Intensity Input and Metadata File
+### 8.1 Starting Intensity Input and Metadata File ✅ COMPLETE
 **Context**: After user demo, need ability for experimenter to specify starting brightness level for each session, plus comprehensive metadata tracking.
 
 **Requirements:**
 
 **A. Starting Intensity Input**
-- [ ] Add starting intensity prompt to session initialization (same dialog flow as participant/session ID)
+- ✅ Add starting intensity prompt to session initialization (same dialog flow as participant/session ID)
   - Prompt: "Enter Starting Intensity (1-255): "
   - Must be an integer between 1 and 255 (inclusive)
   - Required field - continue prompting until valid value entered
   - Validation: reject non-integers, values < 1, values > 255
   - Clear error messages for invalid input
-- [ ] Pass starting intensity to staircase initialization
+  - **Implemented in**: `calibrate.py:get_participant_info_console()`
+- ✅ Pass starting intensity to staircase initialization
   - Replace current hardcoded/config start value with user-entered value
   - Update `staircase.py:create_staircase_from_config()` or similar
-- [ ] Pass starting intensity to DataLogger for metadata recording
+  - **Implemented in**: `calibrate.py:198`
+- ✅ Pass starting intensity to DataLogger for metadata recording
+  - **Implemented in**: `calibrate.py:189-195`, `data_logger.py:DataLogger.__init__()`
 
 **B. Metadata File Implementation**
-- [ ] Create `.meta` file alongside CSV with same basename
+- ✅ Create `.meta` file alongside CSV with same basename
   - Format: `{participant}_{session}_{timestamp}.meta`
   - Example: `P001_S1_20241026_142345.csv` → `P001_S1_20241026_142345.meta`
-- [ ] Format: INI-style key-value pairs (simple `key=value` lines)
-- [ ] Auto-flush after every write (same safety philosophy as CSV)
-- [ ] Write metadata incrementally as values become available:
+  - **Implemented in**: `data_logger.py:74-76`
+- ✅ Format: INI-style key-value pairs (simple `key=value` lines)
+  - **Implemented in**: `data_logger.py:_write_metadata()`
+- ✅ Auto-flush after every write (same safety philosophy as CSV)
+  - **Implemented in**: `data_logger.py:268-276`
+- ✅ Write metadata incrementally as values become available:
   - At session start: participant_id, session_id, timestamp, starting_intensity, experiment_start_time, config info, Python/PsychoPy versions, experiment_completed=false
   - During experiment: Update experiment_completed status if needed
   - At experiment end: final_threshold, total_trials, total_reversals, experiment_end_time, experiment_completed=true
-- [ ] Handle partial results: Always write what's known, so aborted experiments have partial metadata
+  - **Implemented in**: `data_logger.py:open()`, `close()`, `write_final_results()`
+- ✅ Handle partial results: Always write what's known, so aborted experiments have partial metadata
+  - **Implemented in**: `data_logger.py:mark_aborted()`
 
 **C. Metadata Fields**
 
@@ -298,28 +311,44 @@ This plan outlines the implementation of a PsychoPy-based light discomfort thres
 **D. Implementation Details**
 
 *DataLogger Changes (`data_logger.py`):*
-- [ ] Add `__init__` parameter: `starting_intensity: Optional[int] = None`
-- [ ] Generate `.meta` filepath alongside CSV path
-- [ ] Add method: `_write_metadata(incremental=True)` - write/rewrite metadata file
+- ✅ Add `__init__` parameter: `starting_intensity: Optional[int] = None`
+  - **Implemented in**: `data_logger.py:DataLogger.__init__()`
+- ✅ Generate `.meta` filepath alongside CSV path
+  - **Implemented in**: `data_logger.py:74-76`
+- ✅ Add method: `_write_metadata(incremental=True)` - write/rewrite metadata file
   - If incremental=True, preserve existing values, only update changed fields
   - If incremental=False, full rewrite
-- [ ] Add method: `write_final_results(threshold, trials, reversals)` - update metadata with results
-- [ ] Call `_write_metadata()` in `open()` - write initial session metadata
-- [ ] Call `_write_metadata()` in `close()` - update end_time, completed status
-- [ ] Flush metadata file after every write
-- [ ] Add utility function: `read_metadata(meta_path: Path) -> dict[str, str]` - parse .meta file
+  - **Implemented in**: `data_logger.py:211-276`
+- ✅ Add method: `write_final_results(threshold, trials, reversals)` - update metadata with results
+  - **Implemented in**: `data_logger.py:278-301`
+- ✅ Call `_write_metadata()` in `open()` - write initial session metadata
+  - **Implemented in**: `data_logger.py:open()`
+- ✅ Call `_write_metadata()` in `close()` - update end_time, completed status
+  - **Implemented in**: `data_logger.py:close()`
+- ✅ Flush metadata file after every write
+  - **Implemented in**: `data_logger.py:270`
+- ✅ Add utility function: `read_metadata(meta_path: Path) -> dict[str, str]` - parse .meta file
+  - **Implemented in**: `data_logger.py:487-511`
 
 *Integration (`calibrate.py`):*
-- [ ] Modify `get_participant_info_console()` to prompt for starting_intensity
-- [ ] Add validation function: `validate_starting_intensity(value: str) -> Optional[int]`
-- [ ] Pass starting_intensity to DataLogger constructor
-- [ ] Pass starting_intensity to staircase creation
-- [ ] After experiment completes, call `logger.write_final_results(threshold, n_trials, n_reversals)`
-- [ ] Ensure metadata written even on abort (try/finally blocks)
+- ✅ Modify `get_participant_info_console()` to prompt for starting_intensity
+  - **Implemented in**: `calibrate.py:143-153`
+- ✅ Add validation function: `validate_starting_intensity(value: str) -> Optional[int]`
+  - **Implemented in**: `data_logger.py:validate_starting_intensity()`
+- ✅ Pass starting_intensity to DataLogger constructor
+  - **Implemented in**: `calibrate.py:189-195`
+- ✅ Pass starting_intensity to staircase creation
+  - **Implemented in**: `calibrate.py:198`
+- ✅ After experiment completes, call `logger.write_final_results(threshold, n_trials, n_reversals)`
+  - **Implemented in**: `calibrate.py:238-242`
+- ✅ Ensure metadata written even on abort (try/finally blocks)
+  - **Implemented in**: `calibrate.py:270-276`
 
 *Configuration (`config.py`):*
-- [ ] Keep `start_value` in config as fallback/documentation
-- [ ] User-entered value always overrides config value
+- ✅ Keep `start_value` in config as fallback/documentation
+  - **Status**: Kept in default_config.json
+- ✅ User-entered value always overrides config value
+  - **Implemented in**: `calibrate.py:198` (user value passed directly to staircase)
 
 **E. Example Metadata File**
 
@@ -378,47 +407,55 @@ experiment_aborted=true
 - Metadata file can be parsed line-by-line with simple `split('=', 1)`
 - Add method to DataLogger: `mark_aborted()` - call from KeyboardInterrupt handler
 
-### 8.2 Improved Response Input with Correction
+### 8.2 Improved Response Input with Correction ✅ COMPLETE
 **Context**: After user demo, experimenters need ability to correct accidental Y keypresses and have better visual feedback.
 
-**Current Behavior (to be changed):**
+**OLD Behavior:**
 - Response prompt appears after stimulus ends
 - Wait for Y key (uncomfortable) or timeout (comfortable)
 - No ability to correct if Y pressed in error
 - No visual feedback showing what was entered
 
-**New Requirements:**
-- [ ] Continuous keyboard monitoring during trial
+**NEW Requirements (Implemented):**
+- ✅ Continuous keyboard monitoring during trial
   - Start listening: when stimulus begins (goggles turn on)
   - Stop listening: when inter-trial interval ends
   - Listen for: Y key (uncomfortable) and N key (comfortable)
-- [ ] Real-time visual feedback
+  - **Implemented in**: `experiment_ui.py:show_stimulus_and_collect_response()`
+- ✅ Real-time visual feedback
   - Display current response state on screen
   - Update immediately when Y or N pressed
   - Clear visual indication: "Current Response: UNCOMFORTABLE" vs "Current Response: comfortable"
   - Make uncomfortable response highly visible (large text, color if possible)
-- [ ] Response correction capability
+  - **Implemented in**: `experiment_ui.py:274-281, 286-288`
+- ✅ Response correction capability
   - Last key pressed wins (Y or N)
   - Experimenter can press Y, then correct with N (or vice versa)
   - Final response at end of inter-trial interval is recorded
-- [ ] Trial flow timing unchanged
+  - **Implemented in**: `experiment_ui.py:296-300, 305`
+- ✅ Trial flow timing unchanged
   - Pre-stimulus delay: same as before
   - Stimulus duration: same as before (goggles on)
   - Inter-trial interval: same as before (goggles off)
   - Only difference: keyboard monitored throughout instead of just after stimulus
+  - **Implemented in**: `experiment_ui.py:251-302`
+- ✅ Goggles timing controlled internally
+  - Goggles turn ON at stimulus start, OFF at stimulus end
+  - **Fixed in**: commit 104eae7 (2025-01-28) - resolved critical bug where goggles stayed on during ITI
+  - **Implemented in**: `experiment_ui.py:258-284`
 
 **Implementation Notes:**
-- Modify `experiment_ui.py:get_response()` to accept keyboard input throughout trial
-- Track last key pressed (Y or N) in real-time
-- Update display on each keypress
-- Return final response at end of inter-trial interval
-- Consider visual design: large text, contrasting colors for uncomfortable vs comfortable
-- Ensure ESC abort still works at any time
+- Modified `experiment_ui.py:show_stimulus_and_collect_response()` to accept goggle controller and manage timing
+- Tracks last key pressed (Y or N) in real-time
+- Updates display on each keypress
+- Returns final response at end of inter-trial interval
+- Visual design: Clear indication of "UNCOMFORTABLE" vs "comfortable"
+- ESC abort works at any time
 
-**Edge Cases to Consider:**
-- What if no key pressed? (Default to comfortable, as before)
-- What if keys pressed during pre-stimulus delay? (Ignore, or start listening only at stimulus onset?)
-- Ensure goggles timing is not affected by keyboard monitoring
+**Edge Cases Handled:**
+- ✅ No key pressed: Defaults to comfortable
+- ✅ Keys pressed during stimulus: Monitored and tracked
+- ✅ Goggles timing: Ensured not affected by keyboard monitoring (goggles OFF at stimulus end, not ITI end)
 
 ## Phase 9: Documentation & Delivery
 
@@ -475,11 +512,13 @@ Recommended implementation sequence:
 - **Config validation**: Need comprehensive error handling for user-edited JSON
 - **Data integrity**: Must guarantee trial data persists even on crashes
 
-## Dependencies to Research
+## Dependencies
 
-Must verify current PsychoPy 2025.1.1 documentation for:
-- `psychopy.data.StairHandler` (or equivalent in 2025.1.1)
-- Serial port library (psychopy.hardware.serial vs. pyserial)
-- Event/keyboard handling API
-- Data saving format (.psydat)
-- Core timing functions (core.wait, Clock, etc.)
+**PsychoPy 2023.2.3** (last version with PyQt5):
+- ✅ `psychopy.data.StairHandler` - Adaptive staircase implementation
+- ✅ `pyserial` - Serial port library (used via goggles.py)
+- ✅ `psychopy.event` - Keyboard event handling
+- ✅ `.psydat` format - Data saving (pickle-based)
+- ✅ `psychopy.core.wait`, `psychopy.core.Clock` - Timing functions
+
+**Note**: Using PsychoPy 2023.2.3 (not 2024.x+) because it's the last version with PyQt5 support, required for macOS Monterey compatibility.
