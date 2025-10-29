@@ -59,6 +59,7 @@ class ExperimentUI:
 
         logging.info(f"ExperimentUI initialized (fullscreen={fullscreen})")
 
+    # noinspection PyMethodMayBeStatic
     def get_participant_info(self) -> tuple[str, str]:
         """Get participant and session IDs from GUI dialog.
 
@@ -300,6 +301,7 @@ Duration: {duration:.1f}s"""
 
                 display_text = phase_text + response_status + instructions + "\n\n" + timer_text
 
+                # noinspection DuplicatedCode
                 self.text.text = display_text
                 self.text.draw()
                 self.win.flip()
@@ -382,6 +384,7 @@ Duration: {duration:.1f}s"""
 
             display_text = header + response_status + instructions + countdown
 
+            # noinspection DuplicatedCode
             self.text.text = display_text
             self.text.draw()
             self.win.flip()
