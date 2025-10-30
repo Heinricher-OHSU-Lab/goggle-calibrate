@@ -281,6 +281,14 @@ def create_staircase_from_config(
     sc = config["staircase"]
     hw = config["hardware"]
 
+    # Validate starting_intensity if provided
+    if starting_intensity is not None:
+        if starting_intensity < hw["brightness_min"] or starting_intensity > hw["brightness_max"]:
+            raise ValueError(
+                f"starting_intensity {starting_intensity} is outside valid range "
+                f"[{hw['brightness_min']}, {hw['brightness_max']}]"
+            )
+
     # Use user-provided starting intensity if available, otherwise use config value
     start_val = starting_intensity if starting_intensity is not None else sc["start_value"]
 

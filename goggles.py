@@ -43,8 +43,7 @@ class GoggleController:
         port: str,
         baud_rate: int = 9600,
         brightness_min: int = 0,
-        brightness_max: int = 255,
-        timeout: float = 1.0
+        brightness_max: int = 255
     ):
         """Initialize goggles controller.
 
@@ -54,7 +53,6 @@ class GoggleController:
             baud_rate: Serial port baud rate (default: 9600)
             brightness_min: Minimum allowed brightness level (0-255)
             brightness_max: Maximum allowed brightness level (0-255)
-            timeout: Serial port timeout in seconds (default: 1.0)
 
         Raises:
             GoggleError: If port cannot be opened or parameters are invalid
@@ -71,7 +69,6 @@ class GoggleController:
         self.baud_rate = baud_rate
         self.brightness_min = brightness_min
         self.brightness_max = brightness_max
-        self.timeout = timeout
 
         self._serial: Optional[serial.Serial] = None
         self._current_brightness: int = 0
@@ -136,8 +133,7 @@ class GoggleController:
         try:
             self._serial = serial.Serial(
                 port=self.port_name,
-                baudrate=self.baud_rate,
-                timeout=self.timeout
+                baudrate=self.baud_rate
             )
             self._is_open = True
             logging.info(f"Opened serial port {self.port_name}")
@@ -293,6 +289,5 @@ def create_goggles_from_config(config: dict) -> GoggleController:
         port=hw["serial_port"],
         baud_rate=hw["baud_rate"],
         brightness_min=hw["brightness_min"],
-        brightness_max=hw["brightness_max"],
-        timeout=hw.get("serial_timeout", 1.0)
+        brightness_max=hw["brightness_max"]
     )

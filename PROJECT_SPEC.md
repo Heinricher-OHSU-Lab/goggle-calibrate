@@ -141,7 +141,7 @@ File names should be designed such that sort order is:
 - `{participant}_{session}_{timestamp}.csv` - Trial-by-trial data
 - `{participant}_{session}_{timestamp}.meta` - Session metadata (INI format)
 - `{participant}_{session}_{timestamp}_staircase.psydat` - Staircase object (for analysis)
-- `logs/experiment_{timestamp}.log` - Complete runtime log
+- `logs/{timestamp}.log` - Complete runtime log
 
 **CSV Columns:**
 - `goggle_level` - Brightness level presented (0-255)

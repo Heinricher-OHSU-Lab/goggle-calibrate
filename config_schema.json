@@ -16,7 +16,7 @@
         "baud_rate": {
           "type": "integer",
           "description": "Serial port baud rate",
-          "default": 9600
+          "default": 115200
         },
         "brightness_min": {
           "type": "integer",
@@ -31,11 +31,6 @@
           "minimum": 0,
           "maximum": 255,
           "default": 255
-        },
-        "serial_timeout": {
-          "type": "number",
-          "description": "Serial port timeout in seconds",
-          "default": 1.0
         }
       },
       "required": ["serial_port", "baud_rate", "brightness_min", "brightness_max"]
@@ -113,12 +108,6 @@
           "description": "Delay between trials (seconds)",
           "minimum": 0,
           "default": 6.0
-        },
-        "response_timeout": {
-          "type": "number",
-          "description": "Maximum time to wait for response (seconds, 0 = no timeout)",
-          "minimum": 0,
-          "default": 0
         }
       },
       "required": ["pre_stimulus_delay", "stimulus_duration", "inter_trial_interval"]
@@ -154,32 +143,6 @@
           "description": "Number of last reversals to average for threshold (0 = use all)",
           "minimum": 0,
           "default": 6
-        },
-        "auto_save": {
-          "type": "boolean",
-          "description": "Automatically save data after each trial",
-          "default": true
-        }
-      }
-    },
-    "display": {
-      "type": "object",
-      "description": "Experimenter display settings",
-      "properties": {
-        "show_instructions": {
-          "type": "boolean",
-          "description": "Show initial instructions to experimenter",
-          "default": true
-        },
-        "show_trial_info": {
-          "type": "boolean",
-          "description": "Show current trial information during experiment",
-          "default": true
-        },
-        "fullscreen": {
-          "type": "boolean",
-          "description": "Run in fullscreen mode",
-          "default": false
         }
       }
     }

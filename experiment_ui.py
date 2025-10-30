@@ -9,7 +9,6 @@ import logging
 from typing import Optional
 
 from psychopy import core, event, visual
-from psychopy.gui import DlgFromDict
 
 
 class ExperimentUI:
@@ -58,43 +57,6 @@ class ExperimentUI:
         self.clock = core.Clock()
 
         logging.info(f"ExperimentUI initialized (fullscreen={fullscreen})")
-
-    # noinspection PyMethodMayBeStatic
-    def get_participant_info(self) -> tuple[str, str]:
-        """Get participant and session IDs from GUI dialog.
-
-        Returns:
-            Tuple of (participant_id, session_id)
-
-        Raises:
-            SystemExit: If dialog is cancelled
-        """
-        # Create dialog with text fields
-        info = {
-            'Participant ID': '',
-            'Session ID': ''
-        }
-
-        dlg = DlgFromDict(
-            dictionary=info,
-            title='Goggle Calibration Experiment',
-            order=['Participant ID', 'Session ID'],
-            tip={
-                'Participant ID': 'Enter participant identifier (letters, numbers, - and _ only)',
-                'Session ID': 'Enter session identifier (letters, numbers, - and _ only)'
-            }
-        )
-
-        if not dlg.OK:
-            logging.info("Participant info dialog cancelled by user")
-            raise SystemExit("Experiment cancelled by user")
-
-        participant_id = info['Participant ID'].strip()
-        session_id = info['Session ID'].strip()
-
-        logging.info(f"Participant info entered: participant={participant_id}, session={session_id}")
-
-        return participant_id, session_id
 
     def show_instructions(self, participant_id: str, session_id: str) -> None:
         """Display initial instructions to experimenter.
@@ -301,7 +263,6 @@ Duration: {duration:.1f}s"""
 
                 display_text = phase_text + response_status + instructions + "\n\n" + timer_text
 
-                # noinspection DuplicatedCode
                 self.text.text = display_text
                 self.text.draw()
                 self.win.flip()
@@ -327,81 +288,6 @@ Duration: {duration:.1f}s"""
             if in_stimulus_phase:
                 logging.info(f"Trial {trial_number}: Ensuring goggles off (safety)")
                 goggles_controller.set_brightness(0)
-
-        # Determine final response
-        uncomfortable = (current_response == 'Y')
-
-        if current_response == 'Y':
-            logging.info(f"Trial {trial_number}: Final response = UNCOMFORTABLE")
-        else:
-            logging.info(f"Trial {trial_number}: Final response = COMFORTABLE")
-
-        return uncomfortable
-
-    def get_response(
-        self,
-        trial_number: int,
-        timeout: float
-    ) -> bool:
-        """Prompt experimenter for subject's response with real-time feedback.
-
-        Continuously monitors Y/N keys throughout the timeout period.
-        Displays current response state with visual feedback.
-        Last key pressed wins (allows correction).
-
-        Args:
-            trial_number: Current trial number
-            timeout: Time period to collect response (seconds)
-
-        Returns:
-            True if uncomfortable (last press was Y), False if comfortable (N or no press)
-
-        Raises:
-            KeyboardInterrupt: If ESC is pressed
-        """
-        start_time = self.clock.getTime()
-        current_response = None  # None, 'Y', or 'N'
-
-        while True:
-            elapsed = self.clock.getTime() - start_time
-            remaining = timeout - elapsed
-
-            if remaining <= 0:
-                break
-
-            # Build display text with current response state
-            header = f"Trial {trial_number}\n\nAsk subject: \"Uncomfortable?\"\n\n"
-
-            if current_response == 'Y':
-                response_status = "Current Response: UNCOMFORTABLE"
-            elif current_response == 'N':
-                response_status = "Current Response: comfortable"
-            else:
-                response_status = "Current Response: (none - comfortable)"
-
-            instructions = "\n\nPress Y = Uncomfortable\nPress N = Comfortable\n(Last key wins)"
-            countdown = f"\n\nTime remaining: {remaining:.1f}s"
-
-            display_text = header + response_status + instructions + countdown
-
-            # noinspection DuplicatedCode
-            self.text.text = display_text
-            self.text.draw()
-            self.win.flip()
-
-            # Check for keys - listen for Y, N, and ESC
-            keys = event.getKeys(keyList=['y', 'n', 'escape'])
-
-            if 'escape' in keys:
-                raise KeyboardInterrupt("Experiment aborted by experimenter")
-            elif 'y' in keys:
-                current_response = 'Y'
-                logging.info(f"Trial {trial_number}: Key pressed = Y (uncomfortable) at {elapsed:.1f}s")
-            elif 'n' in keys:
-                current_response = 'N'
-                logging.info(f"Trial {trial_number}: Key pressed = N (comfortable) at {elapsed:.1f}s")
-
-            core.wait(0.05)
 
         # Determine final response
         uncomfortable = (current_response == 'Y')
@@ -520,20 +406,3 @@ Press SPACE to exit"""
                 f"Exception in UI context: {exc_type.__name__}: {exc_val}"
             )
         self.close()
-
-
-def create_ui_from_config(config: dict) -> ExperimentUI:
-    """Create an ExperimentUI from a configuration dictionary.
-
-    Args:
-        config: Configuration dictionary containing 'display' section
-
-    Returns:
-        Configured ExperimentUI instance
-    """
-    display = config.get("display", {})
-
-    return ExperimentUI(
-        fullscreen=display.get("fullscreen", False),
-        show_instructions=display.get("show_instructions", True)
-    )

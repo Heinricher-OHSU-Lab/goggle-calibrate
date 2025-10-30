@@ -172,8 +172,8 @@ def run_experiment(cfg: dict, session_timestamp: str) -> None:
         f"session={session_id}, starting_intensity={starting_intensity}"
     )
 
-    # Create UI
-    with experiment_ui.create_ui_from_config(cfg) as ui:
+    # Create UI (display settings are hardcoded in ExperimentUI)
+    with experiment_ui.ExperimentUI() as ui:
         # Initialize logger variable outside try block so it's accessible in except
         logger = None
 
@@ -192,7 +192,7 @@ def run_experiment(cfg: dict, session_timestamp: str) -> None:
                 participant_id=participant_id,
                 session_id=session_id,
                 starting_intensity=starting_intensity,
-                auto_flush=cfg["data"]["auto_save"],
+                auto_flush=True,
                 timestamp=session_timestamp
             )
 

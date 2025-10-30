@@ -41,25 +41,24 @@ def get_default_config() -> Dict[str, Any]:
     return {
         "hardware": {
             "serial_port": "/dev/tty.usbserial-0001",
-            "baud_rate": 9600,
-            "brightness_min": 0,
-            "brightness_max": 255,
-            "serial_timeout": 1.0
+            "baud_rate": 115200,
+            "brightness_min": 1,
+            "brightness_max": 255
         },
         "staircase": {
             "start_value": 128,
             "step_sizes": [32, 16, 8, 4, 2, 1],
             "n_up": 1,
-            "n_down": 3,
-            "n_trials": 30,
+            "n_down": 1,
+            "n_reversals": 10,
+            "n_trials": 100,
             "step_type": "lin",
             "apply_initial_rule": False
         },
         "timing": {
             "pre_stimulus_delay": 6.0,
             "stimulus_duration": 2.0,
-            "inter_trial_interval": 6.0,
-            "response_timeout": 0
+            "inter_trial_interval": 6.0
         },
         "paths": {
             "data_directory": "~/Documents/Calibration/data",
@@ -67,13 +66,7 @@ def get_default_config() -> Dict[str, Any]:
             "config_directory": "~/Documents/Calibration/config"
         },
         "data": {
-            "threshold_reversals": 6,
-            "auto_save": True
-        },
-        "display": {
-            "show_instructions": True,
-            "show_trial_info": True,
-            "fullscreen": False
+            "threshold_reversals": 6
         }
     }
 
@@ -88,7 +81,7 @@ def validate_config(config: Dict[str, Any]) -> None:
         ConfigError: If configuration is invalid
     """
     # Check required top-level sections
-    required_sections = ["hardware", "staircase", "timing", "paths"]
+    required_sections = ["hardware", "staircase", "timing", "paths", "data"]
     for section in required_sections:
         if section not in config:
             raise ConfigError(f"Missing required configuration section: {section}")
@@ -133,13 +126,12 @@ def validate_config(config: Dict[str, Any]) -> None:
     if tm["inter_trial_interval"] < 0:
         raise ConfigError(f"inter_trial_interval must be >= 0, got {tm['inter_trial_interval']}")
 
-    # Validate data settings (if present)
-    if "data" in config:
-        data = config["data"]
-        if data.get("threshold_reversals", 6) < 0:
-            raise ConfigError(
-                f"threshold_reversals must be >= 0, got {data['threshold_reversals']}"
-            )
+    # Validate data settings
+    data = config["data"]
+    if data.get("threshold_reversals", 6) < 0:
+        raise ConfigError(
+            f"threshold_reversals must be >= 0, got {data['threshold_reversals']}"
+        )
 
 
 def create_default_config_file(config_path: Path) -> None:
