@@ -257,3 +257,6 @@ tests/
 
 # macOS
 .DS_Store
+
+# Ignore JetBrains CoPilot migration files
+.idea/copilot.data.migration*

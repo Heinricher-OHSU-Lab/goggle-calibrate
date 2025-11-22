@@ -8,7 +8,7 @@ This experiment presents light stimuli through goggles and uses an adaptive stai
 
 **Key Features:**
 - Adaptive 1-up-1-down staircase procedure
-- Serial port control of light goggles (brightness range 1-255; 0 for shutdown only)
+- Serial port control of light goggles (brightness range 1-255; 0 for off)
 - Safety-critical design: goggles automatically turn off on any exit
 - Real-time data logging with immediate flush
 - Experimenter-facing PsychoPy window interface
